@@ -76,11 +76,11 @@ The system traces its roots back to the original *Shang Shen Marketing Science* 
 
 **The simplest way:**
 
-1. Open ChatGPT / Claude / DeepSeek / Kimi / Qwen / any LLM
-2. Find `6.2纯净版完整加载包(单文件_新对话首条).md` in `dist/01_core/`
-3. Copy the entire content and paste it into a new conversation
-4. Start describing your business problem
-5. The system will automatically generate corresponding strategy solutions
+1. Open any one of the following large language models: ChatGPT, Claude, Doubao, DeepSeek, Kimi, or Qwen.  
+2. Locate the file `6.2纯净版完整加载包(单文件_新对话首条).md` in the `dist/01_core/` directory.  
+3. Select all, copy the content, paste it into a new chat dialog, and send it to confirm.  
+4. Wait for the model to finish reading, then manually type or voice‑input your specific business question in the dialog.  
+5. The model will automatically reason and output a complete strategic diagnostic report and solution plan.
 
 > 💡 No installation, no API configuration — one file is all you need.
 
@@ -213,6 +213,8 @@ This repository is an **archived release of Energy Dumbbell Marketing System V6.
 - **Updated**: 2026-08-14
 - **Compressed package size**: 4.17 MB
 - **Format**: All Markdown text
+- **Gitee平台**：https://gitee.com/caichao-lab/energy-dumbbell
+- **Github平台**：https://github.com/caichao-lab/energy-dumbbell
 
 ---
 
