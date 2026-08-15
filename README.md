@@ -73,11 +73,11 @@ Energy Dumbbell Marketing System V6.2
 
 **最简单的方式：**
 
-1. 打开 ChatGPT / Claude / 豆包 / DeepSeek / Kimi / Qwen 任意一款大模型
+1. 打开 ChatGPT / Claude / 豆包 / DeepSeek / Kimi / Qwen 其中任意一款大模型
 2. 从 `dist/01_core/` 中找到 `6.2纯净版完整加载包(单文件_新对话首条).md`
-3. 全选复制内容，粘贴到新对话框中
-4. 开始输入咨询你的经营问题
-5. 自动输出对应策略解答方案
+3. 全选复制内容，粘贴到新对话框内，然后发送确认
+4. 等待大模型阅读完毕，在对话框手写或语音输入你要咨询的经营问题
+5. 自动推理输出完整策略诊断报告方案
 
 > 💡 无需安装任何软件，无需配置 API，一个文件即可运行。
 
@@ -194,13 +194,19 @@ A: `src/` 是完整原始开发资产，供深度研究者追溯创作链路。�
 - **阿里云盘 **：阿里云盘：https://www.alipan.com/s/SDtrDn5CSgu
 - **夸克网盘 **：夸克网盘：https://pan.quark.cn/s/68946b332736
 
+---
 
 ## 📥 仓库信息
 
 - **版本**：6.2
 - **更新日期**：2026-08-14
 - **全套压缩包文档总大小**：4.17 MB
-- **文件格式**：全部为 Markdown 文本
+- **文件格式**： Markdown 文本
+- **Gitee平台**：https://gitee.com/caichao-lab/energy-dumbbell
+- **Github平台**：https://github.com/caichao-lab/energy-dumbbell
+
+---
+
 ## 📧 反馈与贡献
 
 
