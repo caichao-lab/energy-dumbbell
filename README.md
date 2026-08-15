@@ -73,9 +73,9 @@ Energy Dumbbell Marketing System V6.2
 
 **最简单的方式：**
 
-1. 打开 ChatGPT / Claude / 豆包 / DeepSeek / Kimi / Qwen
+1. 打开 ChatGPT / Claude / 豆包 / DeepSeek / Kimi / Qwen 任意一款大模型
 2. 从 `dist/01_core/` 中找到 `6.2纯净版完整加载包(单文件_新对话首条).md`
-3. 全选复制内容，粘贴到新对话中
+3. 全选复制内容，粘贴到新对话框中
 4. 开始输入咨询你的经营问题
 5. 自动输出对应策略解答方案
 
