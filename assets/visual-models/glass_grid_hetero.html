@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 版权声明：3D酒杯能量模型 · 原创作者：张大宝 · MIT 协议开源 -->
+    <title>3D酒杯能量模型</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>能量哑铃三维结构</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #0a0a1a; font-family: 'Microsoft YaHei', sans-serif; }
+        canvas { display: block; }
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            letter-spacing: 2px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 24px;
+            border-radius: 30px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: none;
+            z-index: 10;
+        }
+        #tooltip {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 20px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            background: rgba(0,0,0,0.6);
+            padding: 12px 32px;
+            border-radius: 30px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15);
+            pointer-events: none;
+            z-index: 10;
+            text-align: center;
+        }
+        #tooltip span.highlight { color: #ffd700; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <div id="tooltip">
+        <span class="highlight">●</span> 能量哑铃 · 三维结构模型
+    </div>
+    <div id="info">🖱 拖拽旋转 · 滚轮缩放 · 自动旋转中</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // --- 初始化场景、相机、渲染器 ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a1a);
+
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(8, 5, 12);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        document.body.appendChild(renderer.domElement);
+
+        // CSS2渲染器（文字标签）
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        document.body.appendChild(labelRenderer.domElement);
+
+        // --- 控制器 ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.2;
+        controls.minDistance = 5;
+        controls.maxDistance = 25;
+        controls.target.set(0, 0, 0);
+        controls.update();
+
+        // --- 灯光 ---
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
+        scene.add(ambientLight);
+
+        const mainLight = new THREE.DirectionalLight(0xffeedd, 1.8);
+        mainLight.position.set(5, 10, 7);
+        mainLight.castShadow = true;
+        scene.add(mainLight);
+
+        const fillLight = new THREE.DirectionalLight(0x4488ff, 0.6);
+        fillLight.position.set(-5, 0, 5);
+        scene.add(fillLight);
+
+        const backLight = new THREE.DirectionalLight(0x8855ff, 0.4);
+        backLight.position.set(0, -5, -8);
+        scene.add(backLight);
+
+        const pointLight = new THREE.PointLight(0xffd700, 0.5, 20);
+        pointLight.position.set(0, 2, 0);
+        scene.add(pointLight);
+
+        // --- 辅助地面网格（仅用于参考）---
+        const gridHelper = new THREE.GridHelper(15, 20, 0x334466, 0x223355);
+        gridHelper.position.y = -3.5;
+        scene.add(gridHelper);
+
+        // --- 创建标签函数 ---
+        function createLabel(text, color = '#ffffff', size = '16px') {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = color;
+            div.style.fontSize = size;
+            div.style.fontWeight = '500';
+            div.style.fontFamily = 'Microsoft YaHei, sans-serif';
+            div.style.textShadow = '0 0 20px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.5)';
+            div.style.letterSpacing = '1px';
+            div.style.background = 'rgba(0,0,0,0.4)';
+            div.style.padding = '4px 14px';
+            div.style.borderRadius = '20px';
+            div.style.backdropFilter = 'blur(4px)';
+            div.style.border = '1px solid rgba(255,255,255,0.1)';
+            return new CSS2DObject(div);
+        }
+
+        // ============================================================
+        // 1. 能量星球外层：资源整合层（半透明球壳）
+        // ============================================================
+        const outerSphereGeo = new THREE.SphereGeometry(4.2, 64, 64);
+        const outerSphereMat = new THREE.MeshPhysicalMaterial({
+            color: 0x2a4a8a,
+            transparent: true,
+            opacity: 0.12,
+            wireframe: false,
+            roughness: 0.3,
+            metalness: 0.1,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+        });
+        const outerSphere = new THREE.Mesh(outerSphereGeo, outerSphereMat);
+        scene.add(outerSphere);
+
+        // 外球线框（辅助视觉）
+        const outerWireGeo = new THREE.SphereGeometry(4.2, 32, 24);
+        const outerWireMat = new THREE.MeshBasicMaterial({
+            color: 0x4488ff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15,
+        });
+        const outerWire = new THREE.Mesh(outerWireGeo, outerWireMat);
+        scene.add(outerWire);
+
+        // 外球发光环线
+        const ringPoints = [];
+        for (let i = 0; i <= 64; i++) {
+            const theta = (i / 64) * Math.PI * 2;
+            ringPoints.push(new THREE.Vector3(Math.cos(theta) * 4.2, 0, Math.sin(theta) * 4.2));
+        }
+        const ringGeo = new THREE.BufferGeometry().setFromPoints(ringPoints);
+        const ringMat = new THREE.LineBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.3 });
+        const ringLine = new THREE.Line(ringGeo, ringMat);
+        scene.add(ringLine);
+
+        // 垂直环线
+        const vRingPoints = [];
+        for (let i = 0; i <= 64; i++) {
+            const theta = (i / 64) * Math.PI * 2;
+            vRingPoints.push(new THREE.Vector3(0, Math.cos(theta) * 4.2, Math.sin(theta) * 4.2));
+        }
+        const vRingGeo = new THREE.BufferGeometry().setFromPoints(vRingPoints);
+        const vRingMat = new THREE.LineBasicMaterial({ color: 0x4488ff, transparent: true, opacity: 0.15 });
+        const vRingLine = new THREE.Line(vRingGeo, vRingMat);
+        scene.add(vRingLine);
+
+        // 外球标签
+        const outerLabel = createLabel('⚡ 资源整合层', '#66aaff', '18px');
+        outerLabel.position.set(4.8, 2.2, 0);
+        scene.add(outerLabel);
+
+        // ============================================================
+        // 2. 能量星球内层：资源配置层（半透明球壳）
+        // ============================================================
+        const innerSphereGeo = new THREE.SphereGeometry(3.0, 48, 48);
+        const innerSphereMat = new THREE.MeshPhysicalMaterial({
+            color: 0x6688dd,
+            transparent: true,
+            opacity: 0.10,
+            wireframe: false,
+            roughness: 0.4,
+            metalness: 0.2,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+        });
+        const innerSphere = new THREE.Mesh(innerSphereGeo, innerSphereMat);
+        scene.add(innerSphere);
+
+        // 内球线框
+        const innerWireGeo = new THREE.SphereGeometry(3.0, 24, 18);
+        const innerWireMat = new THREE.MeshBasicMaterial({
+            color: 0x88bbff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15,
+        });
+        const innerWire = new THREE.Mesh(innerWireGeo, innerWireMat);
+        scene.add(innerWire);
+
+        // 内球标签
+        const innerLabel = createLabel('🔄 资源配置层', '#88bbff', '18px');
+        innerLabel.position.set(-3.6, 1.8, 2.5);
+        scene.add(innerLabel);
+
+        // ============================================================
+        // 3. 产品锥体（左侧，锥尖朝右——推力）
+        // ============================================================
+        const productGroup = new THREE.Group();
+        
+        // 锥体主体（锥尖朝右）
+        const coneGeo = new THREE.ConeGeometry(1.0, 2.4, 32);
+        const coneMat = new THREE.MeshPhysicalMaterial({
+            color: 0xff6633,
+            emissive: 0x661100,
+            emissiveIntensity: 0.2,
+            roughness: 0.3,
+            metalness: 0.6,
+            transparent: true,
+            opacity: 0.85,
+        });
+        const cone = new THREE.Mesh(coneGeo, coneMat);
+        cone.rotation.z = -Math.PI / 2;
+        cone.position.x = 0;
+        cone.castShadow = true;
+        productGroup.add(cone);
+
+        // 锥体底座圆环
+        const baseRingGeo = new THREE.TorusGeometry(1.0, 0.08, 16, 32);
+        const baseRingMat = new THREE.MeshPhysicalMaterial({
+            color: 0xff8844,
+            emissive: 0x441100,
+            emissiveIntensity: 0.1,
+            roughness: 0.4,
+            metalness: 0.7,
+        });
+        const baseRing = new THREE.Mesh(baseRingGeo, baseRingMat);
+        baseRing.position.x = -1.2;
+        baseRing.rotation.y = Math.PI / 2;
+        productGroup.add(baseRing);
+
+        // 锥体发光粒子
+        const glowPoints = [];
+        for (let i = 0; i < 20; i++) {
+            const t = Math.random();
+            const r = 0.3 + t * 0.7;
+            const angle = Math.random() * Math.PI * 2;
+            glowPoints.push(new THREE.Vector3(
+                -1.2 + t * 2.4,
+                Math.cos(angle) * r,
+                Math.sin(angle) * r
+            ));
+        }
+        const glowGeo = new THREE.BufferGeometry().setFromPoints(glowPoints);
+        const glowMat = new THREE.PointsMaterial({
+            color: 0xff8844,
+            size: 0.08,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending,
+        });
+        const glowPointsMesh = new THREE.Points(glowGeo, glowMat);
+        productGroup.add(glowPointsMesh);
+
+        productGroup.position.set(-4.2, 0.4, 0);
+        scene.add(productGroup);
+
+        // 产品标签
+        const productLabel = createLabel('📦 产品（推力）', '#ff8844', '18px');
+        productLabel.position.set(-5.8, 1.6, 0);
+        scene.add(productLabel);
+
+        // ============================================================
+        // 4. 客户锥体（右侧，锥尖朝左——拉力）
+        // ============================================================
+        const customerGroup = new THREE.Group();
+        
+        const coneGeo2 = new THREE.ConeGeometry(1.0, 2.4, 32);
+        const coneMat2 = new THREE.MeshPhysicalMaterial({
+            color: 0x33ccff,
+            emissive: 0x004466,
+            emissiveIntensity: 0.2,
+            roughness: 0.3,
+            metalness: 0.6,
+            transparent: true,
+            opacity: 0.85,
+        });
+        const cone2 = new THREE.Mesh(coneGeo2, coneMat2);
+        cone2.rotation.z = Math.PI / 2;
+        cone2.position.x = 0;
+        cone2.castShadow = true;
+        customerGroup.add(cone2);
+
+        const baseRing2 = new THREE.Mesh(
+            new THREE.TorusGeometry(1.0, 0.08, 16, 32),
+            new THREE.MeshPhysicalMaterial({ color: 0x44ddff, emissive: 0x004466, emissiveIntensity: 0.1, roughness: 0.4, metalness: 0.7 })
+        );
+        baseRing2.position.x = 1.2;
+        baseRing2.rotation.y = Math.PI / 2;
+        customerGroup.add(baseRing2);
+
+        // 客户锥体发光粒子
+        const glowPoints2 = [];
+        for (let i = 0; i < 20; i++) {
+            const t = Math.random();
+            const r = 0.3 + t * 0.7;
+            const angle = Math.random() * Math.PI * 2;
+            glowPoints2.push(new THREE.Vector3(
+                1.2 - t * 2.4,
+                Math.cos(angle) * r,
+                Math.sin(angle) * r
+            ));
+        }
+        const glowGeo2 = new THREE.BufferGeometry().setFromPoints(glowPoints2);
+        const glowMat2 = new THREE.PointsMaterial({
+            color: 0x44ddff,
+            size: 0.08,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending,
+        });
+        const glowPointsMesh2 = new THREE.Points(glowGeo2, glowMat2);
+        customerGroup.add(glowPointsMesh2);
+
+        customerGroup.position.set(4.2, 0.4, 0);
+        scene.add(customerGroup);
+
+        const customerLabel = createLabel('👥 客户（拉力）', '#44ddff', '18px');
+        customerLabel.position.set(5.8, 1.6, 0);
+        scene.add(customerLabel);
+
+        // ============================================================
+        // 5. 成交圆柱体（中间腰部）
+        // ============================================================
+        const dealGroup = new THREE.Group();
+
+        const cylinderGeo = new THREE.CylinderGeometry(0.9, 0.9, 2.0, 32);
+        const cylinderMat = new THREE.MeshPhysicalMaterial({
+            color: 0xaa66ff,
+            emissive: 0x4400aa,
+            emissiveIntensity: 0.15,
+            roughness: 0.2,
+            metalness: 0.8,
+            transparent: true,
+            opacity: 0.75,
+        });
+        const cylinder = new THREE.Mesh(cylinderGeo, cylinderMat);
+        cylinder.position.y = 0;
+        cylinder.castShadow = true;
+        dealGroup.add(cylinder);
+
+        // 成交圆柱发光环
+        const glowRingGeo = new THREE.TorusGeometry(1.0, 0.06, 16, 32);
+        const glowRingMat = new THREE.MeshPhysicalMaterial({
+            color: 0xaa66ff,
+            emissive: 0x6633ff,
+            emissiveIntensity: 0.3,
+            transparent: true,
+            opacity: 0.6,
+        });
+        const glowRing1 = new THREE.Mesh(glowRingGeo, glowRingMat);
+        glowRing1.position.y = -1.0;
+        dealGroup.add(glowRing1);
+
+        const glowRing2 = new THREE.Mesh(glowRingGeo, glowRingMat);
+        glowRing2.position.y = 1.0;
+        dealGroup.add(glowRing2);
+
+        dealGroup.position.set(0, 0.4, 0);
+        scene.add(dealGroup);
+
+        const dealLabel = createLabel('🔄 成交（转化通道）', '#aa66ff', '18px');
+        dealLabel.position.set(0, 2.4, 1.8);
+        scene.add(dealLabel);
+
+        // ============================================================
+        // 6. 利润锥体（下方，锥尖朝上，锥底朝下）
+        // ============================================================
+        const profitGroup = new THREE.Group();
+
+        const profitConeGeo = new THREE.ConeGeometry(1.8, 2.8, 32);
+        const profitConeMat = new THREE.MeshPhysicalMaterial({
+            color: 0xffd700,
+            emissive: 0x886600,
+            emissiveIntensity: 0.2,
+            roughness: 0.2,
+            metalness: 0.9,
+            transparent: true,
+            opacity: 0.8,
+        });
+        const profitCone = new THREE.Mesh(profitConeGeo, profitConeMat);
+        profitCone.position.y = -1.4;
+        profitCone.castShadow = true;
+        profitGroup.add(profitCone);
+
+        // 利润底座光环
+        const profitRingGeo = new THREE.TorusGeometry(1.9, 0.1, 16, 32);
+        const profitRingMat = new THREE.MeshPhysicalMaterial({
+            color: 0xffdd44,
+            emissive: 0xaa8800,
+            emissiveIntensity: 0.3,
+            transparent: true,
+            opacity: 0.5,
+        });
+        const profitRing = new THREE.Mesh(profitRingGeo, profitRingMat);
+        profitRing.position.y = -2.8;
+        profitGroup.add(profitRing);
+
+        // 利润内部光晕粒子
+        const profitParticles = [];
+        for (let i = 0; i < 40; i++) {
+            const t = Math.random();
+            const r = 0.1 + t * 1.6;
+            const angle = Math.random() * Math.PI * 2;
+            const y = -0.2 - t * 2.4;
+            profitParticles.push(new THREE.Vector3(
+                Math.cos(angle) * r * (1 - t * 0.5),
+                y,
+                Math.sin(angle) * r * (1 - t * 0.5)
+            ));
+        }
+        const profitParticlesGeo = new THREE.BufferGeometry().setFromPoints(profitParticles);
+        const profitParticlesMat = new THREE.PointsMaterial({
+            color: 0xffdd44,
+            size: 0.08,
+            transparent: true,
+            opacity: 0.7,
+            blending: THREE.AdditiveBlending,
+        });
+        const profitParticlesMesh = new THREE.Points(profitParticlesGeo, profitParticlesMat);
+        profitGroup.add(profitParticlesMesh);
+
+        profitGroup.position.set(0, -0.8, 0);
+        scene.add(profitGroup);
+
+        const profitLabel = createLabel('💰 利润（积累放大）', '#ffd700', '18px');
+        profitLabel.position.set(0, -3.6, 2.2);
+        scene.add(profitLabel);
+
+        // ============================================================
+        // 7. 闲置体（散布的小球体）
+        // ============================================================
+        const idlePositions = [
+            [-2.8, 2.6, 2.2], [3.2, -1.8, 2.8], [-3.5, -2.4, -1.8], [2.2, 2.8, -2.6],
+            [-1.8, -2.8, 3.0], [1.8, 1.6, 3.8], [-2.2, -0.6, 3.6], [3.6, 1.2, -1.8],
+            [0.6, 3.4, -1.8], [-3.8, 1.8, -0.8], [4.0, -1.2, 0.6], [-4.2, -1.8, 0.8],
+            [3.0, -2.8, -1.2], [-1.2, 3.6, 0.4], [2.6, -2.2, 2.0], [-2.4, -0.8, -3.4],
+            [3.8, 0.6, 1.6], [-3.2, 0.4, -2.6], [0.8, -3.2, -1.8], [-0.6, 2.4, 3.6]
+        ];
+
+        idlePositions.forEach(pos => {
+            const idleGeo = new THREE.SphereGeometry(0.12 + Math.random() * 0.15, 8, 8);
+            const idleMat = new THREE.MeshPhysicalMaterial({
+                color: new THREE.Color().setHSL(0.55 + Math.random() * 0.2, 0.5, 0.5),
+                emissive: new THREE.Color().setHSL(0.55 + Math.random() * 0.2, 0.6, 0.2),
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.5 + Math.random() * 0.3,
+                roughness: 0.3,
+                metalness: 0.4,
+            });
+            const idleSphere = new THREE.Mesh(idleGeo, idleMat);
+            idleSphere.position.set(pos[0], pos[1], pos[2]);
+            scene.add(idleSphere);
+        });
+
+        // 闲置体标签
+        const idleLabel = createLabel('● 闲置体（待激活资源）', '#88aacc', '16px');
+        idleLabel.position.set(-4.6, -1.8, 3.2);
+        scene.add(idleLabel);
+
+        // ============================================================
+        // 8. 能量流动粒子（沿球面运动）
+        // ============================================================
+        const flowParticles = [];
+        const flowCount = 80;
+        const flowPositions = new Float32Array(flowCount * 3);
+        for (let i = 0; i < flowCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const r = 3.8 + Math.random() * 0.4;
+            flowPositions[i * 3] = Math.sin(phi) * Math.cos(theta) * r;
+            flowPositions[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * r;
+            flowPositions[i * 3 + 2] = Math.cos(phi) * r;
+            flowParticles.push({
+                theta: theta,
+                phi: phi,
+                r: r,
+                speed: 0.002 + Math.random() * 0.004,
+                offset: Math.random() * 100,
+            });
+        }
+        const flowGeoP = new THREE.BufferGeometry();
+        flowGeoP.setAttribute('position', new THREE.BufferAttribute(flowPositions, 3));
+        const flowMatP = new THREE.PointsMaterial({
+            color: 0x66aaff,
+            size: 0.06,
+            transparent: true,
+            opacity: 0.5,
+            blending: THREE.AdditiveBlending,
+        });
+        const flowMesh = new THREE.Points(flowGeoP, flowMatP);
+        scene.add(flowMesh);
+
+        // ============================================================
+        // 9. 连接线（产品→成交→利润）
+        // ============================================================
+        const points = [
+            [-4.2, 0.4, 0],
+            [-2.0, 0.4, 0],
+            [0, 0.4, 0],
+            [2.0, 0.4, 0],
+            [4.2, 0.4, 0]
+        ];
+        const linePoints = points.map(p => new THREE.Vector3(p[0], p[1], p[2]));
+        const lineGeo2 = new THREE.BufferGeometry().setFromPoints(linePoints);
+        const lineMat2 = new THREE.LineBasicMaterial({
+            color: 0x4488ff,
+            transparent: true,
+            opacity: 0.2,
+            dashed: true,
+        });
+        const dashLine = new THREE.Line(lineGeo2, lineMat2);
+        dashLine.computeLineDistances();
+        scene.add(dashLine);
+
+        // 成交→利润连接线
+        const vertPoints = [
+            [0, 0.4, 0],
+            [0, -0.8, 0]
+        ];
+        const vertLinePoints = vertPoints.map(p => new THREE.Vector3(p[0], p[1], p[2]));
+        const vertLineGeo = new THREE.BufferGeometry().setFromPoints(vertLinePoints);
+        const vertLineMat = new THREE.LineBasicMaterial({
+            color: 0x8866ff,
+            transparent: true,
+            opacity: 0.15,
+            dashed: true,
+        });
+        const vertDashLine = new THREE.Line(vertLineGeo, vertLineMat);
+        vertDashLine.computeLineDistances();
+        scene.add(vertDashLine);
+
+        // ============================================================
+        // 10. 底部“复制启动”指示
+        // ============================================================
+        const copyPoints = [];
+        for (let i = 0; i < 20; i++) {
+            const angle = (i / 20) * Math.PI * 2;
+            const r = 2.2 + Math.random() * 0.5;
+            copyPoints.push(new THREE.Vector3(
+                Math.cos(angle) * r,
+                -4.0,
+                Math.sin(angle) * r
+            ));
+        }
+        const copyGeo = new THREE.BufferGeometry().setFromPoints(copyPoints);
+        const copyMat = new THREE.PointsMaterial({
+            color: 0xff6644,
+            size: 0.1,
+            transparent: true,
+            opacity: 0.4,
+            blending: THREE.AdditiveBlending,
+        });
+        const copyMesh = new THREE.Points(copyGeo, copyMat);
+        scene.add(copyMesh);
+
+        const copyLabel = createLabel('🚀 复制启动（量变→质变）', '#ff6644', '18px');
+        copyLabel.position.set(0, -4.6, 0);
+        scene.add(copyLabel);
+
+        // ============================================================
+        // 11. 诊断系统（外部扫描雷达）
+        // ============================================================
+        const radarGroup = new THREE.Group();
+
+        // 雷达底座
+        const radarBase = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.6, 0.8, 0.15, 16),
+            new THREE.MeshPhysicalMaterial({ color: 0x44ddff, emissive: 0x006688, emissiveIntensity: 0.3, transparent: true, opacity: 0.7 })
+        );
+        radarBase.position.y = 0;
+        radarGroup.add(radarBase);
+
+        // 雷达天线
+        const radarAntenna = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.03, 0.03, 1.0, 8),
+            new THREE.MeshPhysicalMaterial({ color: 0x88ddff, emissive: 0x0088ff, emissiveIntensity: 0.5 })
+        );
+        radarAntenna.position.y = 0.5;
+        radarGroup.add(radarAntenna);
+
+        // 雷达盘
+        const radarDisk = new THREE.Mesh(
+            new THREE.RingGeometry(0.2, 0.8, 32),
+            new THREE.MeshBasicMaterial({ color: 0x44ddff, transparent: true, opacity: 0.15, side: THREE.DoubleSide })
+        );
+        radarDisk.rotation.x = -Math.PI / 2;
+        radarDisk.position.y = 0.1;
+        radarGroup.add(radarDisk);
+
+        // 扫描线
+        const scanLinePoints = [];
+        for (let i = 0; i <= 30; i++) {
+            const angle = (i / 30) * Math.PI * 2;
+            scanLinePoints.push(new THREE.Vector3(Math.cos(angle) * 0.8, 0, Math.sin(angle) * 0.8));
+        }
+        const scanLineGeo = new THREE.BufferGeometry().setFromPoints(scanLinePoints);
+        const scanLineMat = new THREE.LineBasicMaterial({ color: 0x44ddff, transparent: true, opacity: 0.15 });
+        const scanLine = new THREE.Line(scanLineGeo, scanLineMat);
+        scanLine.rotation.x = -Math.PI / 2;
+        scanLine.position.y = 0.1;
+        radarGroup.add(scanLine);
+
+        radarGroup.position.set(5.5, 2.8, 4.5);
+        scene.add(radarGroup);
+
+        const radarLabel = createLabel('📡 诊断系统（外部扫描）', '#44ddff', '16px');
+        radarLabel.position.set(5.5, 3.6, 4.5);
+        scene.add(radarLabel);
+
+        // ============================================================
+        // 动画循环
+        // ============================================================
+        let time = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+
+            // 自动旋转
+            controls.update();
+
+            // 产品锥体微动（呼吸效果）
+            const breathe = 1 + Math.sin(time * 0.8) * 0.02;
+            productGroup.scale.set(breathe, breathe, breathe);
+            customerGroup.scale.set(breathe, breathe, breathe);
+
+            // 成交圆柱呼吸
+            const breathe2 = 1 + Math.sin(time * 0.6 + 0.5) * 0.03;
+            dealGroup.scale.set(breathe2, breathe2, breathe2);
+
+            // 利润锥体发光脉动
+            const pulse = 0.6 + Math.sin(time * 0.7) * 0.2;
+            profitConeMat.emissiveIntensity = pulse * 0.3;
+
+            // 粒子流动
+            const positions = flowMesh.geometry.attributes.position.array;
+            for (let i = 0; i < flowCount; i++) {
+                const p = flowParticles[i];
+                p.theta += p.speed;
+                const r = p.r;
+                positions[i * 3] = Math.sin(p.phi) * Math.cos(p.theta) * r;
+                positions[i * 3 + 1] = Math.sin(p.phi) * Math.sin(p.theta) * r;
+                positions[i * 3 + 2] = Math.cos(p.phi) * r;
+            }
+            flowMesh.geometry.attributes.position.needsUpdate = true;
+
+            // 雷达旋转
+            radarGroup.rotation.y += 0.015;
+
+            // 渲染
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+
+        animate();
+
+        // --- 窗口自适应 ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- 点击切换自动旋转 ---
+        renderer.domElement.addEventListener('click', () => {
+            controls.autoRotate = !controls.autoRotate;
+        });
+    </script>
+    <div style="position:fixed;bottom:6px;right:12px;font-size:11px;color:#888;opacity:0.6;z-index:9999;pointer-events:none;font-family:sans-serif;">
+        3D模型 © 张大宝 · MIT
+    </div>
+</body>
+</body>
+</html>

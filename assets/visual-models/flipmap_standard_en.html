@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Copyright: Flip Mind Map · Pure CSS · Author: Zhang Dabao · MIT -->
+    <title>Flip Mind Map · Pure CSS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #eef2f7;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        /* Top Bar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .toolbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toolbar .brand h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0b1e33;
+        }
+        .toolbar .brand span {
+            background: #0b1e33;
+            color: white;
+            font-size: 12px;
+            padding: 2px 14px;
+            border-radius: 40px;
+        }
+        .toolbar .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            border: 1px solid #d0d9e4;
+            background: white;
+            padding: 6px 18px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:hover {
+            background: #0b1e33;
+            color: white;
+            border-color: #0b1e33;
+        }
+        .btn-primary {
+            background: #0b1e33;
+            color: white;
+            border-color: #0b1e33;
+        }
+        .btn-primary:hover {
+            background: #1a3550;
+        }
+        .badge {
+            background: #eef2f7;
+            padding: 4px 16px;
+            border-radius: 60px;
+            font-size: 13px;
+            color: #3e5a76;
+        }
+        .badge strong {
+            color: #0b1e33;
+        }
+
+        /* Main Layout: Tree + Permission Panel */
+        .main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        .tree-container {
+            flex: 1;
+            padding: 20px 30px 20px 20px;
+            overflow: auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .root-node {
+            margin-bottom: 20px;
+        }
+        .branch {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .branch-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 150px;
+        }
+        .group-label {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a2d44;
+            margin-bottom: 12px;
+            background: rgba(255,255,255,0.6);
+            padding: 4px 16px;
+            border-radius: 40px;
+            backdrop-filter: blur(2px);
+        }
+        .leaf-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            align-items: center;
+        }
+
+        /* Card Flip Styles */
+        .card-wrapper {
+            perspective: 800px;
+            width: 160px;
+            height: 100px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .card-wrapper.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .card-wrapper.flipped .flipper {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .card-front {
+            background: white;
+            color: #0b1e33;
+        }
+        .card-front .icon {
+            font-size: 26px;
+            margin-bottom: 4px;
+        }
+        .card-front .title {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .card-front .sub {
+            font-size: 12px;
+            color: #5e7a97;
+            margin-top: 2px;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            background: #0b1e33;
+            color: white;
+        }
+        .card-back .icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+            opacity: 0.7;
+        }
+        .card-back .title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .card-back .sub {
+            font-size: 12px;
+            color: rgba(255,255,255,0.65);
+            margin-top: 2px;
+        }
+        .card-back .badge {
+            margin-top: 6px;
+            background: rgba(255,255,255,0.12);
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.8);
+        }
+        .status-tag {
+            font-size: 10px;
+            color: #7a8fa3;
+            margin-top: 4px;
+        }
+
+        /* Permission Panel */
+        .perm-panel {
+            width: 200px;
+            background: white;
+            border-left: 1px solid rgba(0,0,0,0.05);
+            padding: 20px 18px;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+        .perm-panel h4 {
+            font-size: 14px;
+            color: #3e5a76;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        .perm-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f4f9;
+        }
+        .perm-item label {
+            font-size: 14px;
+            color: #1a2d44;
+            cursor: pointer;
+        }
+        .perm-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #0b1e33;
+            cursor: pointer;
+        }
+        .perm-hint {
+            font-size: 12px;
+            color: #7a8fa3;
+            margin-top: 16px;
+            border-top: 1px solid #eef2f7;
+            padding-top: 14px;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .branch { gap: 30px; }
+            .card-wrapper { width: 140px; height: 90px; }
+            .perm-panel { width: 160px; }
+        }
+        @media (max-width: 700px) {
+            .main { flex-direction: column; }
+            .perm-panel {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid rgba(0,0,0,0.05);
+                padding: 12px 16px;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 8px;
+            }
+            .perm-panel h4 { margin-bottom: 0; width: 100%; }
+            .perm-item { border-bottom: none; padding: 4px 8px; }
+            .tree-container { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="brand">
+            <h1>🌳 Flip Mind Map · Pure CSS</h1>
+            <span>No Dependencies</span>
+        </div>
+        <div class="actions">
+            <span class="badge">🔄 Flipped <strong id="flipCounter">0</strong></span>
+            <button class="btn" id="resetBtn">⟲ Reset All</button>
+            <button class="btn btn-primary" id="flipAllBtn">⇄ Flip All</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="tree-container" id="treeContainer">
+            <!-- Tree structure rendered by JS -->
+        </div>
+        <div class="perm-panel" id="permPanel">
+            <h4>⚙️ Flip Permissions</h4>
+            <div class="perm-item">
+                <label><input type="checkbox" class="perm-check" data-group="root" checked /> Root</label>
+            </div>
+            <div class="perm-item">
+                <label><input type="checkbox" class="perm-check" data-group="group1" checked /> People</label>
+            </div>
+            <div class="perm-item">
+                <label><input type="checkbox" class="perm-check" data-group="group2" checked /> Product</label>
+            </div>
+            <div class="perm-item">
+                <label><input type="checkbox" class="perm-check" data-group="group3" checked /> Place</label>
+            </div>
+            <div class="perm-hint">✔ Checked = Allowed</div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  1. Tree Data
+        // ============================================================
+        const treeData = {
+            key: 'root',
+            label: 'Marketing 4.0',
+            frontIcon: '🧭',
+            frontTitle: 'Marketing 4.0',
+            frontSub: 'Full Diagnosis Framework',
+            backIcon: '🔍',
+            backTitle: 'Marketing 4.0 · Blind Spots',
+            backSub: 'Scanning potential bottlenecks',
+            group: 'root',
+            children: [{
+                key: 'group1',
+                label: 'People',
+                frontIcon: '👤',
+                frontTitle: 'People',
+                frontSub: 'Customer Dimensions',
+                backIcon: '⚠️',
+                backTitle: 'People · Bottlenecks',
+                backSub: 'Need / Purchase / Decision',
+                group: 'group1',
+                children: [
+                    { key: 'g1_1', frontIcon: '🎯', frontTitle: 'Need · Strong', frontSub: 'Clear pain points',
+                        backIcon: '🌀', backTitle: 'Need · Weak', backSub: 'Requires pre-education', group: 'group1' },
+                    { key: 'g1_2', frontIcon: '💰', frontTitle: 'Budget · Sufficient', frontSub: 'Covered by budget',
+                        backIcon: '🔒', backTitle: 'Budget · Limited', backSub: 'Consider installment plans', group: 'group1' },
+                    { key: 'g1_3', frontIcon: '🧠', frontTitle: 'Decision · Autonomous', frontSub: 'No barriers',
+                        backIcon: '⛓️', backTitle: 'Decision · Blocked', backSub: 'Need to address decision chain', group: 'group1' }
+                ]
+            }, {
+                key: 'group2',
+                label: 'Product',
+                frontIcon: '📦',
+                frontTitle: 'Product',
+                frontSub: 'Competition & Standards',
+                backIcon: '⚡',
+                backTitle: 'Product · Competition',
+                backSub: 'Blind spots & mismatches',
+                group: 'group2',
+                children: [
+                    { key: 'g2_1', frontIcon: '📊', frontTitle: 'Competition · Multi-dimensional', frontSub: 'Comprehensive insight',
+                        backIcon: '🔍', backTitle: 'Competition · Blind spots', backSub: 'Need market research', group: 'group2' },
+                    { key: 'g2_2', frontIcon: '📏', frontTitle: 'Standards · Clear', frontSub: 'Industry benchmarks',
+                        backIcon: '⚖️', backTitle: 'Standards · Missing', backSub: 'Establish quantifiable metrics', group: 'group2' },
+                    { key: 'g2_3', frontIcon: '✅', frontTitle: 'Product · Fit', frontSub: 'Precise match',
+                        backIcon: '❌', backTitle: 'Product · Mismatch', backSub: 'Adjust product mix', group: 'group2' }
+                ]
+            }, {
+                key: 'group3',
+                label: 'Place',
+                frontIcon: '🏟️',
+                frontTitle: 'Place',
+                frontSub: 'Trust & Conversion',
+                backIcon: '🔥',
+                backTitle: 'Place · Conversion',
+                backSub: 'Trust / Experience / Value',
+                group: 'group3',
+                children: [
+                    { key: 'g3_1', frontIcon: '🤝', frontTitle: 'Trust · Strong', frontSub: 'Deep信赖',
+                        backIcon: '🛡️', backTitle: 'Trust · Fragile', backSub: 'Need guarantees/endorsements', group: 'group3' },
+                    { key: 'g3_2', frontIcon: '✨', frontTitle: 'Experience · Deep', frontSub: 'First-hand validation',
+                        backIcon: '❓', backTitle: 'Experience · Missing', backSub: 'Design free trials', group: 'group3' },
+                    { key: 'g3_3', frontIcon: '💎', frontTitle: 'Value · Clear', frontSub: 'Customer认可',
+                        backIcon: '📉', backTitle: 'Value · Vague', backSub: 'Strengthen comparative presentation', group: 'group3' }
+                ]
+            }]
+        };
+
+        // ============================================================
+        //  2. State Management
+        // ============================================================
+        const flipMap = new Map();       // key -> true/false (true = flipped)
+        const permMap = new Map();       // key -> true/false (true = allowed to flip)
+
+        function collectKeys(node, list) {
+            list.push(node.key);
+            if (node.children) node.children.forEach(c => collectKeys(c, list));
+        }
+        const allKeys = [];
+        collectKeys(treeData, allKeys);
+        allKeys.forEach(k => { flipMap.set(k, false); permMap.set(k, true); });
+
+        // ============================================================
+        //  3. Render Tree
+        // ============================================================
+        const container = document.getElementById('treeContainer');
+        const counterEl = document.getElementById('flipCounter');
+
+        function renderTree() {
+            container.innerHTML = '';
+            const treeDiv = document.createElement('div');
+            treeDiv.className = 'tree';
+
+            // Root node
+            const rootWrapper = document.createElement('div');
+            rootWrapper.className = 'root-node';
+            rootWrapper.appendChild(createCard(treeData, true));
+            treeDiv.appendChild(rootWrapper);
+
+            // Three branches
+            const branchDiv = document.createElement('div');
+            branchDiv.className = 'branch';
+            treeData.children.forEach(group => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'branch-group';
+                const label = document.createElement('div');
+                label.className = 'group-label';
+                label.textContent = group.label;
+                groupDiv.appendChild(label);
+
+                const leafList = document.createElement('div');
+                leafList.className = 'leaf-list';
+                group.children.forEach(leaf => {
+                    leafList.appendChild(createCard(leaf, false));
+                });
+                groupDiv.appendChild(leafList);
+                branchDiv.appendChild(groupDiv);
+            });
+            treeDiv.appendChild(branchDiv);
+            container.appendChild(treeDiv);
+            updateCounter();
+            applyPermissions();
+        }
+
+        function createCard(node, isRoot) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card-wrapper';
+            wrapper.dataset.key = node.key;
+            if (flipMap.get(node.key)) wrapper.classList.add('flipped');
+
+            const flipper = document.createElement('div');
+            flipper.className = 'flipper';
+
+            // Front
+            const front = document.createElement('div');
+            front.className = 'card-face card-front';
+            front.innerHTML = `
+                <div class="icon">${node.frontIcon}</div>
+                <div class="title">${node.frontTitle}</div>
+                <div class="sub">${node.frontSub || ''}</div>
+            `;
+
+            // Back
+            const back = document.createElement('div');
+            back.className = 'card-face card-back';
+            back.innerHTML = `
+                <div class="icon">${node.backIcon}</div>
+                <div class="title">${node.backTitle}</div>
+                <div class="sub">${node.backSub || ''}</div>
+                ${node.backBadge ? `<div class="badge">${node.backBadge}</div>` : ''}
+            `;
+
+            flipper.appendChild(front);
+            flipper.appendChild(back);
+            wrapper.appendChild(flipper);
+
+            wrapper.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const key = this.dataset.key;
+                if (!permMap.get(key)) return;
+                const current = flipMap.get(key);
+                flipMap.set(key, !current);
+                this.classList.toggle('flipped');
+                updateCounter();
+            });
+
+            return wrapper;
+        }
+
+        // ============================================================
+        //  4. Counter & Permissions
+        // ============================================================
+        function updateCounter() {
+            let count = 0;
+            for (let [k, v] of flipMap) if (v) count++;
+            counterEl.textContent = count;
+        }
+
+        function applyPermissions() {
+            document.querySelectorAll('.card-wrapper').forEach(el => {
+                const key = el.dataset.key;
+                const canFlip = permMap.get(key) !== false;
+                if (!canFlip) el.classList.add('disabled');
+                else el.classList.remove('disabled');
+            });
+        }
+
+        document.querySelectorAll('.perm-check').forEach(chk => {
+            chk.addEventListener('change', function() {
+                const group = this.dataset.group;
+                allKeys.forEach(k => {
+                    const node = findNode(treeData, k);
+                    if (node && node.group === group) {
+                        permMap.set(k, this.checked);
+                    }
+                });
+                applyPermissions();
+            });
+        });
+
+        function findNode(root, key) {
+            if (root.key === key) return root;
+            if (root.children) {
+                for (let child of root.children) {
+                    const found = findNode(child, key);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        // ============================================================
+        //  5. Button Events
+        // ============================================================
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            for (let k of allKeys) flipMap.set(k, false);
+            document.querySelectorAll('.card-wrapper').forEach(el => el.classList.remove('flipped'));
+            updateCounter();
+        });
+
+        document.getElementById('flipAllBtn').addEventListener('click', function() {
+            document.querySelectorAll('.card-wrapper').forEach(el => {
+                const key = el.dataset.key;
+                if (permMap.get(key)) {
+                    const current = flipMap.get(key);
+                    flipMap.set(key, !current);
+                    el.classList.toggle('flipped');
+                }
+            });
+            updateCounter();
+        });
+
+        // ============================================================
+        //  6. Launch
+        // ============================================================
+        renderTree();
+    </script>
+    <div style="position:fixed;bottom:6px;right:12px;font-size:11px;color:#888;opacity:0.6;z-index:9999;pointer-events:none;font-family:sans-serif;">
+        3D Model © Zhang Dabao · MIT
+    </div>
+</body>
+</html>

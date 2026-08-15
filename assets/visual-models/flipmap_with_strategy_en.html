@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Copyright: Flip Mind Map · Strategy Engine · Author: Zhang Dabao · MIT -->
+    <title>Flip Mind Map · Strategy Engine</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #eef2f7;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Bar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 24px;
+            background: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .toolbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toolbar .brand h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0b1e33;
+        }
+        .toolbar .brand span {
+            background: #0b1e33;
+            color: white;
+            font-size: 11px;
+            padding: 2px 12px;
+            border-radius: 40px;
+        }
+        .toolbar .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            border: 1px solid #d0d9e4;
+            background: white;
+            padding: 5px 16px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn:hover {
+            background: #0b1e33;
+            color: white;
+            border-color: #0b1e33;
+        }
+        .btn-primary {
+            background: #0b1e33;
+            color: white;
+            border-color: #0b1e33;
+        }
+        .btn-primary:hover { background: #1a3550; }
+        .badge {
+            background: #eef2f7;
+            padding: 4px 14px;
+            border-radius: 60px;
+            font-size: 13px;
+            color: #3e5a76;
+        }
+        .badge strong { color: #0b1e33; }
+
+        /* Main Layout */
+        .main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Tree Area */
+        .tree-area {
+            flex: 1;
+            padding: 20px 20px 20px 30px;
+            overflow: auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .root-node { margin-bottom: 20px; }
+        .branch {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 50px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .branch-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 150px;
+        }
+        .group-label {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a2d44;
+            margin-bottom: 12px;
+            background: rgba(255,255,255,0.6);
+            padding: 4px 16px;
+            border-radius: 40px;
+        }
+        .leaf-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            align-items: center;
+        }
+
+        /* Card Flip */
+        .card-wrapper {
+            perspective: 800px;
+            width: 160px;
+            height: 100px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .card-wrapper.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.23,1,0.32,1);
+            transform-style: preserve-3d;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .card-wrapper.flipped .flipper {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .card-front {
+            background: white;
+            color: #0b1e33;
+        }
+        .card-front .icon { font-size: 24px; margin-bottom: 4px; }
+        .card-front .title { font-weight: 700; font-size: 15px; }
+        .card-front .sub { font-size: 12px; color: #5e7a97; margin-top: 2px; }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: #0b1e33;
+            color: white;
+        }
+        .card-back .icon { font-size: 22px; margin-bottom: 4px; opacity: 0.7; }
+        .card-back .title { font-weight: 600; font-size: 15px; }
+        .card-back .sub { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 2px; }
+        .card-back .badge {
+            margin-top: 6px;
+            background: rgba(255,255,255,0.12);
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Strategy Panel */
+        .strategy-panel {
+            width: 340px;
+            background: white;
+            border-left: 1px solid rgba(0,0,0,0.05);
+            padding: 20px 18px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            box-shadow: -4px 0 12px rgba(0,0,0,0.02);
+        }
+        .strategy-panel h3 {
+            font-size: 16px;
+            color: #0b1e33;
+            margin-bottom: 12px;
+        }
+        .status-summary {
+            background: #f8faff;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            border: 1px solid #eef2f7;
+            font-size: 13px;
+            color: #1a2d44;
+            max-height: 130px;
+            overflow-y: auto;
+        }
+        .status-summary .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed #eef2f7;
+        }
+        .status-summary .item:last-child { border-bottom: none; }
+        .status-summary .flipped { color: #c44536; font-weight: 600; }
+        .status-summary .normal { color: #3e5a76; }
+
+        .strategy-output {
+            flex: 1;
+            border-radius: 12px;
+            background: #f4f8fe;
+            padding: 16px 18px;
+            border: 1px solid #e0e8f0;
+            min-height: 150px;
+        }
+        .strategy-output .title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #0b1e33;
+            margin-bottom: 6px;
+        }
+        .strategy-output .desc {
+            font-size: 14px;
+            color: #1a2d44;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .strategy-output .priority {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #dce6f0;
+            color: #1a2d44;
+        }
+        .strategy-output .priority.urgent { background: #fbe9e7; color: #b33c2f; }
+        .strategy-output .priority.high   { background: #ffecb3; color: #9e6e00; }
+        .strategy-output .priority.medium { background: #dce6f0; color: #1a2d44; }
+        .strategy-output .priority.low    { background: #e8edf2; color: #5e7a97; }
+        .strategy-output .no-match {
+            color: #7a8fa3;
+            font-size: 14px;
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        /* Permission Controls */
+        .perm-controls {
+            margin-top: 16px;
+            border-top: 1px solid #eef2f7;
+            padding-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .perm-controls label {
+            font-size: 13px;
+            color: #1a2d44;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .perm-controls input[type="checkbox"] {
+            accent-color: #0b1e33;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .branch { gap: 30px; }
+            .card-wrapper { width: 140px; height: 90px; }
+            .strategy-panel { width: 280px; }
+        }
+        @media (max-width: 700px) {
+            .main { flex-direction: column; }
+            .strategy-panel {
+                width: 100%;
+                height: 250px;
+                border-left: none;
+                border-top: 1px solid rgba(0,0,0,0.05);
+                padding: 14px 16px;
+            }
+            .tree-area { padding: 12px; }
+            .branch { gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="brand">
+            <h1>🌳 Flip Mind Map · Strategy Engine</h1>
+            <span>Pure CSS</span>
+        </div>
+        <div class="actions">
+            <span class="badge">🔄 Flipped <strong id="flipCounter">0</strong></span>
+            <button class="btn" id="resetBtn">⟲ Reset All</button>
+            <button class="btn btn-primary" id="flipAllBtn">⇄ Flip All</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="tree-area" id="treeArea"></div>
+        <div class="strategy-panel">
+            <h3>📋 Diagnosis & Strategy</h3>
+            <div class="status-summary" id="statusSummary">
+                <div style="color:#7a8fa3; font-size:13px;">Click a card to flip — status will appear here</div>
+            </div>
+            <div class="strategy-output" id="strategyOutput">
+                <div class="no-match">💡 Flip cards to generate a matching strategy</div>
+            </div>
+            <div class="perm-controls">
+                <label><input type="checkbox" class="perm-check" data-group="group1" checked /> People</label>
+                <label><input type="checkbox" class="perm-check" data-group="group2" checked /> Product</label>
+                <label><input type="checkbox" class="perm-check" data-group="group3" checked /> Place</label>
+                <label><input type="checkbox" class="perm-check" data-group="root" checked /> Root</label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  1. Tree Data (Front & Back descriptions)
+        // ============================================================
+        const treeData = {
+            key: 'root',
+            group: 'root',
+            frontIcon: '🧭', frontTitle: 'Marketing 4.0', frontSub: 'Full Diagnosis Framework',
+            backIcon: '🔍', backTitle: 'Marketing 4.0 · Blind Spots', backSub: 'Scanning potential bottlenecks',
+            children: [{
+                key: 'group1', group: 'group1',
+                frontIcon: '👤', frontTitle: 'People', frontSub: 'Customer Dimensions',
+                backIcon: '⚠️', backTitle: 'People · Bottlenecks', backSub: 'Need / Purchase / Decision',
+                children: [
+                    { key: 'g1_1', group: 'group1', frontIcon: '🎯', frontTitle: 'Need · Strong', frontSub: 'Clear pain points',
+                        backIcon: '🌀', backTitle: 'Need · Weak', backSub: 'Requires pre-education' },
+                    { key: 'g1_2', group: 'group1', frontIcon: '💰', frontTitle: 'Budget · Sufficient', frontSub: 'Covered by budget',
+                        backIcon: '🔒', backTitle: 'Budget · Limited', backSub: 'Consider installment plans' },
+                    { key: 'g1_3', group: 'group1', frontIcon: '🧠', frontTitle: 'Decision · Autonomous', frontSub: 'No barriers',
+                        backIcon: '⛓️', backTitle: 'Decision · Blocked', backSub: 'Need to address decision chain' }
+                ]
+            }, {
+                key: 'group2', group: 'group2',
+                frontIcon: '📦', frontTitle: 'Product', frontSub: 'Competition & Standards',
+                backIcon: '⚡', backTitle: 'Product · Competition', backSub: 'Blind spots & mismatches',
+                children: [
+                    { key: 'g2_1', group: 'group2', frontIcon: '📊', frontTitle: 'Competition · Multi-dimensional', frontSub: 'Comprehensive insight',
+                        backIcon: '🔍', backTitle: 'Competition · Blind spots', backSub: 'Need market research' },
+                    { key: 'g2_2', group: 'group2', frontIcon: '📏', frontTitle: 'Standards · Clear', frontSub: 'Industry benchmarks',
+                        backIcon: '⚖️', backTitle: 'Standards · Missing', backSub: 'Establish quantifiable metrics' },
+                    { key: 'g2_3', group: 'group2', frontIcon: '✅', frontTitle: 'Product · Fit', frontSub: 'Precise match',
+                        backIcon: '❌', backTitle: 'Product · Mismatch', backSub: 'Adjust product mix' }
+                ]
+            }, {
+                key: 'group3', group: 'group3',
+                frontIcon: '🏟️', frontTitle: 'Place', frontSub: 'Trust & Conversion',
+                backIcon: '🔥', backTitle: 'Place · Conversion', backSub: 'Trust / Experience / Value',
+                children: [
+                    { key: 'g3_1', group: 'group3', frontIcon: '🤝', frontTitle: 'Trust · Strong', frontSub: 'Deep信赖',
+                        backIcon: '🛡️', backTitle: 'Trust · Fragile', backSub: 'Need guarantee / endorsement' },
+                    { key: 'g3_2', group: 'group3', frontIcon: '✨', frontTitle: 'Experience · Deep', frontSub: 'First-hand validation',
+                        backIcon: '❓', backTitle: 'Experience · Missing', backSub: 'Design free trials' },
+                    { key: 'g3_3', group: 'group3', frontIcon: '💎', frontTitle: 'Value · Clear', frontSub: 'Customer认可',
+                        backIcon: '📉', backTitle: 'Value · Vague', backSub: 'Strengthen comparative presentation' }
+                ]
+            }]
+        };
+
+        // Collect all node keys
+        function collectKeys(node, list) {
+            list.push(node.key);
+            if (node.children) node.children.forEach(c => collectKeys(c, list));
+        }
+        const allKeys = [];
+        collectKeys(treeData, allKeys);
+
+        // ============================================================
+        //  2. State
+        // ============================================================
+        const flipMap = new Map();   // key -> true = flipped
+        const permMap = new Map();   // key -> true = allowed to flip
+        allKeys.forEach(k => { flipMap.set(k, false); permMap.set(k, true); });
+
+        // Get leaf nodes (for strategy matching)
+        function getLeafKeys(node, list) {
+            if (!node.children || node.children.length === 0) list.push(node.key);
+            else node.children.forEach(c => getLeafKeys(c, list));
+            return list;
+        }
+        const leafKeys = getLeafKeys(treeData, []);
+
+        // ============================================================
+        //  3. Strategy Library (Flip combination → Strategy)
+        // ============================================================
+        const strategyLibrary = {
+            // Single node flipped
+            "g1_1:true": { name: "Weak Need", strategy: "Launch pre-education to awaken customer pain points through content marketing or free consultations to cultivate demand.", priority: "high" },
+            "g1_2:true": { name: "Budget Constrained", strategy: "Offer installment plans, low-tier entry versions, or seek subsidies/financing support.", priority: "medium" },
+            "g1_3:true": { name: "Decision Blocked", strategy: "Optimize the decision chain — provide exclusive briefings for key decision-makers, or design family/team participation experiences.", priority: "high" },
+            "g2_1:true": { name: "Competitive Blind Spot", strategy: "Re-conduct market research, clarify differentiation, or focus on a niche segment.", priority: "medium" },
+            "g2_2:true": { name: "Missing Standards", strategy: "Establish quantifiable industry standards, publish white papers or comparison reports to become the customer's 'ruler'.", priority: "urgent" },
+            "g2_3:true": { name: "Product Mismatch", strategy: "Adjust product mix or service bundles, redesign the value proposition for the target customer.", priority: "medium" },
+            "g3_1:true": { name: "Fragile Trust", strategy: "Strengthen paid guarantees (e.g., money-back guarantee), add authoritative endorsements, and showcase real customer stories.", priority: "urgent" },
+            "g3_2:true": { name: "Experience Missing", strategy: "Design free trials, samples, or immersive demos so customers can experience the value firsthand.", priority: "high" },
+            "g3_3:true": { name: "Vague Value", strategy: "Refine core selling points, create comparison charts, highlight outcomes and benefits to make value instantly clear.", priority: "medium" },
+            // Multi-node combinations
+            "g1_1:true,g3_1:true": { name: "Weak Need + Fragile Trust", strategy: "First, educate to awaken demand; simultaneously offer low-barrier trials and paid guarantees to reduce risk.", priority: "urgent" },
+            "g1_2:true,g1_3:true": { name: "Budget + Decision Blocked", strategy: "Provide flexible payment options and assist with internal decision-making — e.g., supply internal briefing materials.", priority: "high" },
+            "g2_2:true,g3_2:true": { name: "Missing Standards + Missing Experience", strategy: "Immediately establish quantifiable standards while launching deep experience activities — both fronts simultaneously.", priority: "urgent" },
+            "g3_1:true,g3_2:true": { name: "Fragile Trust + Missing Experience", strategy: "Start with free trials, backed by money-back guarantees and customer testimonials, to quickly break through skepticism.", priority: "urgent" },
+            "g1_1:true,g2_2:true,g3_1:true": { name: "Weak Need + Missing Standards + Fragile Trust", strategy: "Systematic rebuild: first educate the customer to recognize the problem, then demonstrate standards, finally use experience and guarantees to close.", priority: "urgent" },
+            "all_good": { name: "All Clear", strategy: "All modules are currently in positive state. Maintain momentum and look for amplification opportunities while monitoring for potential changes.", priority: "low" }
+        };
+
+        // ============================================================
+        //  4. Render Tree
+        // ============================================================
+        const treeArea = document.getElementById('treeArea');
+        const counterEl = document.getElementById('flipCounter');
+        const statusSummary = document.getElementById('statusSummary');
+        const strategyOutput = document.getElementById('strategyOutput');
+
+        function createCard(node) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card-wrapper';
+            wrapper.dataset.key = node.key;
+            if (flipMap.get(node.key)) wrapper.classList.add('flipped');
+
+            const flipper = document.createElement('div');
+            flipper.className = 'flipper';
+
+            // Front
+            const front = document.createElement('div');
+            front.className = 'card-face card-front';
+            front.innerHTML = `
+                <div class="icon">${node.frontIcon}</div>
+                <div class="title">${node.frontTitle}</div>
+                <div class="sub">${node.frontSub || ''}</div>
+            `;
+            // Back
+            const back = document.createElement('div');
+            back.className = 'card-face card-back';
+            back.innerHTML = `
+                <div class="icon">${node.backIcon}</div>
+                <div class="title">${node.backTitle}</div>
+                <div class="sub">${node.backSub || ''}</div>
+            `;
+
+            flipper.appendChild(front);
+            flipper.appendChild(back);
+            wrapper.appendChild(flipper);
+
+            wrapper.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const key = this.dataset.key;
+                if (!permMap.get(key)) return;
+                const current = flipMap.get(key);
+                flipMap.set(key, !current);
+                this.classList.toggle('flipped');
+                updateUI();
+            });
+
+            return wrapper;
+        }
+
+        function renderTree() {
+            treeArea.innerHTML = '';
+            const treeDiv = document.createElement('div');
+            treeDiv.className = 'tree';
+
+            // Root node
+            const rootWrapper = document.createElement('div');
+            rootWrapper.className = 'root-node';
+            rootWrapper.appendChild(createCard(treeData));
+            treeDiv.appendChild(rootWrapper);
+
+            // Three branches
+            const branchDiv = document.createElement('div');
+            branchDiv.className = 'branch';
+            treeData.children.forEach(group => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'branch-group';
+                const label = document.createElement('div');
+                label.className = 'group-label';
+                label.textContent = group.frontTitle;
+                groupDiv.appendChild(label);
+
+                const leafList = document.createElement('div');
+                leafList.className = 'leaf-list';
+                group.children.forEach(leaf => {
+                    leafList.appendChild(createCard(leaf));
+                });
+                groupDiv.appendChild(leafList);
+                branchDiv.appendChild(groupDiv);
+            });
+            treeDiv.appendChild(branchDiv);
+            treeArea.appendChild(treeDiv);
+            updateUI();
+        }
+
+        // ============================================================
+        //  5. Update UI (Status Summary + Strategy Match)
+        // ============================================================
+        function updateUI() {
+            // Counter
+            let count = 0;
+            for (let v of flipMap.values()) if (v) count++;
+            counterEl.textContent = count;
+
+            // Status Summary
+            const state = {};
+            leafKeys.forEach(k => { state[k] = flipMap.get(k) || false; });
+            const flipped = leafKeys.filter(k => state[k]);
+            let summaryHtml = '';
+            if (flipped.length === 0) {
+                summaryHtml = '<div style="color:#3e5a76;">✅ No flipped modules — all clear</div>';
+            } else {
+                summaryHtml = '<div style="font-weight:600; margin-bottom:4px;">🔴 Flipped Modules:</div>';
+                flipped.forEach(k => {
+                    const label = getNodeLabel(k);
+                    summaryHtml += `<div class="item"><span>${label}</span><span class="flipped">Back</span></div>`;
+                });
+                const normal = leafKeys.filter(k => !state[k]);
+                if (normal.length > 0) {
+                    summaryHtml += '<div style="font-weight:600; margin-top:8px; margin-bottom:4px;">🟢 Normal Modules:</div>';
+                    normal.forEach(k => {
+                        const label = getNodeLabel(k);
+                        summaryHtml += `<div class="item"><span>${label}</span><span class="normal">Front</span></div>`;
+                    });
+                }
+            }
+            statusSummary.innerHTML = summaryHtml;
+
+            // Strategy Matching
+            const strategy = matchStrategy(state);
+            let outputHtml = '';
+            if (strategy) {
+                const cls = strategy.priority || 'medium';
+                outputHtml += `<div class="title">📌 ${strategy.name}</div>`;
+                outputHtml += `<div class="desc">${strategy.strategy}</div>`;
+                outputHtml += `<span class="priority ${cls}">${cls.toUpperCase()}</span>`;
+            } else {
+                outputHtml = '<div class="no-match">💡 No matching strategy — try flipping other nodes</div>';
+            }
+            strategyOutput.innerHTML = outputHtml;
+
+            // Permission styling
+            document.querySelectorAll('.card-wrapper').forEach(el => {
+                const key = el.dataset.key;
+                if (!permMap.get(key)) el.classList.add('disabled');
+                else el.classList.remove('disabled');
+            });
+        }
+
+        function getNodeLabel(key) {
+            function find(node) {
+                if (node.key === key) return node.frontTitle;
+                if (node.children) {
+                    for (let c of node.children) {
+                        const res = find(c);
+                        if (res) return res;
+                    }
+                }
+                return null;
+            }
+            return find(treeData) || key;
+        }
+
+        // Strategy Matching Engine
+        function matchStrategy(state) {
+            const keys = Object.keys(state).sort();
+            const stateKey = keys.map(k => `${k}:${state[k]}`).join(',');
+            // Exact match
+            if (strategyLibrary[stateKey]) return strategyLibrary[stateKey];
+            // All front
+            if (keys.every(k => state[k] === false)) {
+                return strategyLibrary['all_good'] || { name: 'All Clear', strategy: 'All modules are normal. Continue monitoring.', priority: 'low' };
+            }
+            // Try removing one node
+            for (let i = 0; i < keys.length; i++) {
+                const sub = { ...state };
+                delete sub[keys[i]];
+                const subKey = Object.keys(sub).sort().map(k => `${k}:${sub[k]}`).join(',');
+                if (strategyLibrary[subKey]) return strategyLibrary[subKey];
+            }
+            // Try removing two nodes
+            for (let i = 0; i < keys.length; i++) {
+                for (let j = i+1; j < keys.length; j++) {
+                    const sub = { ...state };
+                    delete sub[keys[i]];
+                    delete sub[keys[j]];
+                    const subKey = Object.keys(sub).sort().map(k => `${k}:${sub[k]}`).join(',');
+                    if (strategyLibrary[subKey]) return strategyLibrary[subKey];
+                }
+            }
+            return { name: 'Comprehensive Recommendation', strategy: 'No dedicated strategy found for this combination. Assess all flipped modules and prioritize those marked as "urgent".', priority: 'medium' };
+        }
+
+        // ============================================================
+        //  6. Permission Controls
+        // ============================================================
+        document.querySelectorAll('.perm-check').forEach(chk => {
+            chk.addEventListener('change', function() {
+                const group = this.dataset.group;
+                allKeys.forEach(k => {
+                    const node = findNodeByGroup(treeData, k, group);
+                    if (node) permMap.set(k, this.checked);
+                });
+                updateUI();
+            });
+        });
+
+        function findNodeByGroup(node, key, group) {
+            if (node.key === key && node.group === group) return node;
+            if (node.children) {
+                for (let c of node.children) {
+                    const found = findNodeByGroup(c, key, group);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        // ============================================================
+        //  7. Button Events
+        // ============================================================
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            allKeys.forEach(k => flipMap.set(k, false));
+            document.querySelectorAll('.card-wrapper').forEach(el => el.classList.remove('flipped'));
+            updateUI();
+        });
+
+        document.getElementById('flipAllBtn').addEventListener('click', function() {
+            document.querySelectorAll('.card-wrapper').forEach(el => {
+                const key = el.dataset.key;
+                if (permMap.get(key)) {
+                    const current = flipMap.get(key);
+                    flipMap.set(key, !current);
+                    el.classList.toggle('flipped');
+                }
+            });
+            updateUI();
+        });
+
+        // ============================================================
+        //  8. Launch
+        // ============================================================
+        renderTree();
+    </script>
+    <div style="position:fixed;bottom:6px;right:12px;font-size:11px;color:#888;opacity:0.6;z-index:9999;pointer-events:none;font-family:sans-serif;">
+        3D Model © Zhang Dabao · MIT
+    </div>
+</body>
+</html>

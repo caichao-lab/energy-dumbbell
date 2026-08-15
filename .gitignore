@@ -1,0 +1,35 @@
+# 系统垃圾文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# VSCode、编辑器缓存
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python demo 运行缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.tmp
+*.bak
+
+# 私密配置（只留示例模板，真实密钥不上传）
+config.json
+
+# 本地工具（不上传）
+generate_tree.py
+
+# 环境变量（不上传）
+.env
+
+# PyCharm IDE（如使用）
+.idea/

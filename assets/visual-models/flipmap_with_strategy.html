@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 版权声明：3D酒杯能量模型 · 原创作者：张大宝 · MIT 协议开源 -->
+    <title>3D酒杯能量模型</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>翻转导图 · 策略引擎（纯CSS版）</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #eef2f7;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 顶栏 */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 24px;
+            background: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .toolbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toolbar .brand h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0b1e33;
+        }
+        .toolbar .brand span {
+            background: #0b1e33;
+            color: white;
+            font-size: 11px;
+            padding: 2px 12px;
+            border-radius: 40px;
+        }
+        .toolbar .actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            border: 1px solid #d0d9e4;
+            background: white;
+            padding: 5px 16px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn:hover {
+            background: #0b1e33;
+            color: white;
+            border-color: #0b1e33;
+        }
+        .btn-primary {
+            background: #0b1e33;
+            color: white;
+            border-color: #0b1e33;
+        }
+        .btn-primary:hover { background: #1a3550; }
+        .badge {
+            background: #eef2f7;
+            padding: 4px 14px;
+            border-radius: 60px;
+            font-size: 13px;
+            color: #3e5a76;
+        }
+        .badge strong { color: #0b1e33; }
+
+        /* 主布局 */
+        .main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 树形区域 */
+        .tree-area {
+            flex: 1;
+            padding: 20px 20px 20px 30px;
+            overflow: auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .root-node { margin-bottom: 20px; }
+        .branch {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 50px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .branch-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 150px;
+        }
+        .group-label {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a2d44;
+            margin-bottom: 12px;
+            background: rgba(255,255,255,0.6);
+            padding: 4px 16px;
+            border-radius: 40px;
+        }
+        .leaf-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            align-items: center;
+        }
+
+        /* 卡片翻转 */
+        .card-wrapper {
+            perspective: 800px;
+            width: 160px;
+            height: 100px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .card-wrapper.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.23,1,0.32,1);
+            transform-style: preserve-3d;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .card-wrapper.flipped .flipper {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .card-front {
+            background: white;
+            color: #0b1e33;
+        }
+        .card-front .icon { font-size: 24px; margin-bottom: 4px; }
+        .card-front .title { font-weight: 700; font-size: 15px; }
+        .card-front .sub { font-size: 12px; color: #5e7a97; margin-top: 2px; }
+
+        .card-back {
+            transform: rotateY(180deg);
+            background: #0b1e33;
+            color: white;
+        }
+        .card-back .icon { font-size: 22px; margin-bottom: 4px; opacity: 0.7; }
+        .card-back .title { font-weight: 600; font-size: 15px; }
+        .card-back .sub { font-size: 12px; color: rgba(255,255,255,0.65); margin-top: 2px; }
+        .card-back .badge {
+            margin-top: 6px;
+            background: rgba(255,255,255,0.12);
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* 策略面板 */
+        .strategy-panel {
+            width: 340px;
+            background: white;
+            border-left: 1px solid rgba(0,0,0,0.05);
+            padding: 20px 18px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            box-shadow: -4px 0 12px rgba(0,0,0,0.02);
+        }
+        .strategy-panel h3 {
+            font-size: 16px;
+            color: #0b1e33;
+            margin-bottom: 12px;
+        }
+        .status-summary {
+            background: #f8faff;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            border: 1px solid #eef2f7;
+            font-size: 13px;
+            color: #1a2d44;
+            max-height: 130px;
+            overflow-y: auto;
+        }
+        .status-summary .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed #eef2f7;
+        }
+        .status-summary .item:last-child { border-bottom: none; }
+        .status-summary .flipped { color: #c44536; font-weight: 600; }
+        .status-summary .normal { color: #3e5a76; }
+
+        .strategy-output {
+            flex: 1;
+            border-radius: 12px;
+            background: #f4f8fe;
+            padding: 16px 18px;
+            border: 1px solid #e0e8f0;
+            min-height: 150px;
+        }
+        .strategy-output .title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #0b1e33;
+            margin-bottom: 6px;
+        }
+        .strategy-output .desc {
+            font-size: 14px;
+            color: #1a2d44;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+        .strategy-output .priority {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #dce6f0;
+            color: #1a2d44;
+        }
+        .strategy-output .priority.urgent { background: #fbe9e7; color: #b33c2f; }
+        .strategy-output .priority.high   { background: #ffecb3; color: #9e6e00; }
+        .strategy-output .priority.medium { background: #dce6f0; color: #1a2d44; }
+        .strategy-output .priority.low    { background: #e8edf2; color: #5e7a97; }
+        .strategy-output .no-match {
+            color: #7a8fa3;
+            font-size: 14px;
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        /* 权限控制（放在策略面板底部） */
+        .perm-controls {
+            margin-top: 16px;
+            border-top: 1px solid #eef2f7;
+            padding-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .perm-controls label {
+            font-size: 13px;
+            color: #1a2d44;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .perm-controls input[type="checkbox"] {
+            accent-color: #0b1e33;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .branch { gap: 30px; }
+            .card-wrapper { width: 140px; height: 90px; }
+            .strategy-panel { width: 280px; }
+        }
+        @media (max-width: 700px) {
+            .main { flex-direction: column; }
+            .strategy-panel {
+                width: 100%;
+                height: 250px;
+                border-left: none;
+                border-top: 1px solid rgba(0,0,0,0.05);
+                padding: 14px 16px;
+            }
+            .tree-area { padding: 12px; }
+            .branch { gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="brand">
+            <h1>🌳 翻转导图 · 策略引擎</h1>
+            <span>纯CSS版</span>
+        </div>
+        <div class="actions">
+            <span class="badge">🔄 已翻转 <strong id="flipCounter">0</strong></span>
+            <button class="btn" id="resetBtn">⟲ 全部复位</button>
+            <button class="btn btn-primary" id="flipAllBtn">⇄ 全部翻转</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="tree-area" id="treeArea"></div>
+        <div class="strategy-panel">
+            <h3>📋 诊断结论 &amp; 策略</h3>
+            <div class="status-summary" id="statusSummary">
+                <div style="color:#7a8fa3; font-size:13px;">点击节点翻转，状态将显示在此</div>
+            </div>
+            <div class="strategy-output" id="strategyOutput">
+                <div class="no-match">💡 翻转节点后，将自动匹配策略方案</div>
+            </div>
+            <div class="perm-controls">
+                <label><input type="checkbox" class="perm-check" data-group="group1" checked /> 看人</label>
+                <label><input type="checkbox" class="perm-check" data-group="group2" checked /> 看货</label>
+                <label><input type="checkbox" class="perm-check" data-group="group3" checked /> 看场</label>
+                <label><input type="checkbox" class="perm-check" data-group="root" checked /> 根节点</label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  1. 树形数据（含正反面描述）
+        // ============================================================
+        const treeData = {
+            key: 'root',
+            group: 'root',
+            frontIcon: '🧭', frontTitle: '营销4.0 诊断', frontSub: '全面诊断框架',
+            backIcon: '🔍', backTitle: '营销4.0 · 盲区', backSub: '扫描潜在卡点',
+            children: [{
+                key: 'group1', group: 'group1',
+                frontIcon: '👤', frontTitle: '看人', frontSub: '客户三维度',
+                backIcon: '⚠️', backTitle: '人 · 卡点', backSub: '需求/购买/支配',
+                children: [
+                    { key: 'g1_1', group: 'group1', frontIcon: '🎯', frontTitle: '需求力·强', frontSub: '明确痛点',
+                        backIcon: '🌀', backTitle: '需求力·弱', backSub: '需前置教育' },
+                    { key: 'g1_2', group: 'group1', frontIcon: '💰', frontTitle: '购买力·充足', frontSub: '预算覆盖',
+                        backIcon: '🔒', backTitle: '购买力·受限', backSub: '考虑分期' },
+                    { key: 'g1_3', group: 'group1', frontIcon: '🧠', frontTitle: '支配力·自主', frontSub: '决策无阻',
+                        backIcon: '⛓️', backTitle: '支配力·受阻', backSub: '需解决决策链' }
+                ]
+            }, {
+                key: 'group2', group: 'group2',
+                frontIcon: '📦', frontTitle: '看货', frontSub: '竞争与标准',
+                backIcon: '⚡', backTitle: '货 · 竞争', backSub: '盲区与错配',
+                children: [
+                    { key: 'g2_1', group: 'group2', frontIcon: '📊', frontTitle: '竞争·多维', frontSub: '全面洞察',
+                        backIcon: '🔍', backTitle: '竞争·盲区', backSub: '需市场调研' },
+                    { key: 'g2_2', group: 'group2', frontIcon: '📏', frontTitle: '标准·清晰', frontSub: '行业标杆',
+                        backIcon: '⚖️', backTitle: '标准·缺失', backSub: '建立量化标准' },
+                    { key: 'g2_3', group: 'group2', frontIcon: '✅', frontTitle: '货·适配', frontSub: '精准匹配',
+                        backIcon: '❌', backTitle: '货·错配', backSub: '调整产品组合' }
+                ]
+            }, {
+                key: 'group3', group: 'group3',
+                frontIcon: '🏟️', frontTitle: '看场', frontSub: '信任与转化',
+                backIcon: '🔥', backTitle: '场 · 转化', backSub: '信任/体验/价值',
+                children: [
+                    { key: 'g3_1', group: 'group3', frontIcon: '🤝', frontTitle: '信任·牢固', frontSub: '深度信赖',
+                        backIcon: '🛡️', backTitle: '信任·脆弱', backSub: '需要兜底背书' },
+                    { key: 'g3_2', group: 'group3', frontIcon: '✨', frontTitle: '体验·深度', frontSub: '亲自验证',
+                        backIcon: '❓', backTitle: '体验·缺失', backSub: '设计免费试用' },
+                    { key: 'g3_3', group: 'group3', frontIcon: '💎', frontTitle: '价值·清晰', frontSub: '客户认可',
+                        backIcon: '📉', backTitle: '价值·模糊', backSub: '强化对比呈现' }
+                ]
+            }]
+        };
+
+        // 收集所有节点key
+        function collectKeys(node, list) {
+            list.push(node.key);
+            if (node.children) node.children.forEach(c => collectKeys(c, list));
+        }
+        const allKeys = [];
+        collectKeys(treeData, allKeys);
+
+        // ============================================================
+        //  2. 状态
+        // ============================================================
+        const flipMap = new Map();   // key -> true=反面
+        const permMap = new Map();   // key -> true=允许翻转
+        allKeys.forEach(k => { flipMap.set(k, false); permMap.set(k, true); });
+
+        // 获取叶子节点（用于策略匹配）
+        function getLeafKeys(node, list) {
+            if (!node.children || node.children.length === 0) list.push(node.key);
+            else node.children.forEach(c => getLeafKeys(c, list));
+            return list;
+        }
+        const leafKeys = getLeafKeys(treeData, []);
+
+        // ============================================================
+        //  3. 策略库（匹配翻转组合 -> 策略）
+        // ============================================================
+        const strategyLibrary = {
+            // 单节点翻转
+            "g1_1:true": { name: "需求力弱", strategy: "启动前置教育，唤醒客户痛点，通过内容营销或免费咨询培养需求。", priority: "high" },
+            "g1_2:true": { name: "购买力受限", strategy: "提供分期付款、低门槛入门版、或寻找补贴/金融支持方案。", priority: "medium" },
+            "g1_3:true": { name: "支配力受阻", strategy: "优化决策链，为关键决策人提供专属说明，或设计家庭/团队共同参与体验。", priority: "high" },
+            "g2_1:true": { name: "竞争盲区", strategy: "重新进行市场调研，明确差异化定位，或聚焦细分市场。", priority: "medium" },
+            "g2_2:true": { name: "标准缺失", strategy: "建立可量化的行业标准，发布白皮书或对比测评，成为客户心中的'尺子'。", priority: "urgent" },
+            "g2_3:true": { name: "货的错配", strategy: "调整产品组合或服务包，针对目标客户重新设计价值主张。", priority: "medium" },
+            "g3_1:true": { name: "信任脆弱", strategy: "强化付费兜底承诺（如退款保障），增加权威背书，展示真实客户案例。", priority: "urgent" },
+            "g3_2:true": { name: "体验缺失", strategy: "设计免费试用、样品体验、或沉浸式演示，让客户亲自感受价值。", priority: "high" },
+            "g3_3:true": { name: "价值模糊", strategy: "提炼核心卖点，制作对比图表，突出结果与收益，让价值一目了然。", priority: "medium" },
+            // 多节点组合
+            "g1_1:true,g3_1:true": { name: "需求弱 + 信任弱", strategy: "先通过前置教育唤醒需求，同时提供低门槛体验和付费兜底，降低尝试风险。", priority: "urgent" },
+            "g1_2:true,g1_3:true": { name: "购买力+支配力双受限", strategy: "提供灵活支付方案，并协助客户解决决策链问题，如提供内部汇报材料。", priority: "high" },
+            "g2_2:true,g3_2:true": { name: "标准缺失 + 体验缺失", strategy: "立即建立可量化标准，并同步推出深度体验活动，双管齐下建立信任。", priority: "urgent" },
+            "g3_1:true,g3_2:true": { name: "信任脆弱 + 体验缺失", strategy: "以免费试用为核心，配合退款保障和客户见证，迅速打破怀疑。", priority: "urgent" },
+            "g1_1:true,g2_2:true,g3_1:true": { name: "需求弱 + 标准缺 + 信任弱", strategy: "系统化重建：先教育客户认知问题，再展示标准，最后用体验和兜底促成。", priority: "urgent" },
+            "all_good": { name: "状态优良", strategy: "当前诊断显示所有模块均为正面，建议保持并寻找放大机会，同时关注潜在变化。", priority: "low" }
+        };
+
+        // ============================================================
+        //  4. 渲染树
+        // ============================================================
+        const treeArea = document.getElementById('treeArea');
+        const counterEl = document.getElementById('flipCounter');
+        const statusSummary = document.getElementById('statusSummary');
+        const strategyOutput = document.getElementById('strategyOutput');
+
+        function createCard(node) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card-wrapper';
+            wrapper.dataset.key = node.key;
+            if (flipMap.get(node.key)) wrapper.classList.add('flipped');
+
+            const flipper = document.createElement('div');
+            flipper.className = 'flipper';
+
+            // 正面
+            const front = document.createElement('div');
+            front.className = 'card-face card-front';
+            front.innerHTML = `
+                <div class="icon">${node.frontIcon}</div>
+                <div class="title">${node.frontTitle}</div>
+                <div class="sub">${node.frontSub || ''}</div>
+            `;
+            // 反面
+            const back = document.createElement('div');
+            back.className = 'card-face card-back';
+            back.innerHTML = `
+                <div class="icon">${node.backIcon}</div>
+                <div class="title">${node.backTitle}</div>
+                <div class="sub">${node.backSub || ''}</div>
+            `;
+
+            flipper.appendChild(front);
+            flipper.appendChild(back);
+            wrapper.appendChild(flipper);
+
+            wrapper.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const key = this.dataset.key;
+                if (!permMap.get(key)) return;
+                const current = flipMap.get(key);
+                flipMap.set(key, !current);
+                this.classList.toggle('flipped');
+                updateUI();
+            });
+
+            return wrapper;
+        }
+
+        function renderTree() {
+            treeArea.innerHTML = '';
+            const treeDiv = document.createElement('div');
+            treeDiv.className = 'tree';
+
+            // 根节点
+            const rootWrapper = document.createElement('div');
+            rootWrapper.className = 'root-node';
+            rootWrapper.appendChild(createCard(treeData));
+            treeDiv.appendChild(rootWrapper);
+
+            // 三大分支
+            const branchDiv = document.createElement('div');
+            branchDiv.className = 'branch';
+            treeData.children.forEach(group => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'branch-group';
+                const label = document.createElement('div');
+                label.className = 'group-label';
+                label.textContent = group.frontTitle;
+                groupDiv.appendChild(label);
+
+                const leafList = document.createElement('div');
+                leafList.className = 'leaf-list';
+                group.children.forEach(leaf => {
+                    leafList.appendChild(createCard(leaf));
+                });
+                groupDiv.appendChild(leafList);
+                branchDiv.appendChild(groupDiv);
+            });
+            treeDiv.appendChild(branchDiv);
+            treeArea.appendChild(treeDiv);
+            updateUI();
+        }
+
+        // ============================================================
+        //  5. 更新UI（状态摘要 + 策略匹配）
+        // ============================================================
+        function updateUI() {
+            // 计数器
+            let count = 0;
+            for (let v of flipMap.values()) if (v) count++;
+            counterEl.textContent = count;
+
+            // 状态摘要
+            const state = {};
+            leafKeys.forEach(k => { state[k] = flipMap.get(k) || false; });
+            const flipped = leafKeys.filter(k => state[k]);
+            let summaryHtml = '';
+            if (flipped.length === 0) {
+                summaryHtml = '<div style="color:#3e5a76;">✅ 当前无翻转模块，状态良好</div>';
+            } else {
+                summaryHtml = '<div style="font-weight:600; margin-bottom:4px;">🔴 翻转模块：</div>';
+                flipped.forEach(k => {
+                    const label = getNodeLabel(k);
+                    summaryHtml += `<div class="item"><span>${label}</span><span class="flipped">反面</span></div>`;
+                });
+                const normal = leafKeys.filter(k => !state[k]);
+                if (normal.length > 0) {
+                    summaryHtml += '<div style="font-weight:600; margin-top:8px; margin-bottom:4px;">🟢 正常模块：</div>';
+                    normal.forEach(k => {
+                        const label = getNodeLabel(k);
+                        summaryHtml += `<div class="item"><span>${label}</span><span class="normal">正面</span></div>`;
+                    });
+                }
+            }
+            statusSummary.innerHTML = summaryHtml;
+
+            // 策略匹配
+            const strategy = matchStrategy(state);
+            let outputHtml = '';
+            if (strategy) {
+                const cls = strategy.priority || 'medium';
+                outputHtml += `<div class="title">📌 ${strategy.name}</div>`;
+                outputHtml += `<div class="desc">${strategy.strategy}</div>`;
+                outputHtml += `<span class="priority ${cls}">${cls.toUpperCase()}</span>`;
+            } else {
+                outputHtml = '<div class="no-match">💡 暂无匹配策略，请翻转其他节点尝试</div>';
+            }
+            strategyOutput.innerHTML = outputHtml;
+
+            // 权限样式
+            document.querySelectorAll('.card-wrapper').forEach(el => {
+                const key = el.dataset.key;
+                if (!permMap.get(key)) el.classList.add('disabled');
+                else el.classList.remove('disabled');
+            });
+        }
+
+        function getNodeLabel(key) {
+            // 在树中查找
+            function find(node) {
+                if (node.key === key) return node.frontTitle;
+                if (node.children) {
+                    for (let c of node.children) {
+                        const res = find(c);
+                        if (res) return res;
+                    }
+                }
+                return null;
+            }
+            return find(treeData) || key;
+        }
+
+        // 策略匹配引擎
+        function matchStrategy(state) {
+            const keys = Object.keys(state).sort();
+            const stateKey = keys.map(k => `${k}:${state[k]}`).join(',');
+            // 精确匹配
+            if (strategyLibrary[stateKey]) return strategyLibrary[stateKey];
+            // 全正面
+            if (keys.every(k => state[k] === false)) {
+                return strategyLibrary['all_good'] || { name: '状态优良', strategy: '所有模块正常，建议持续监控。', priority: 'low' };
+            }
+            // 移除一个节点尝试
+            for (let i = 0; i < keys.length; i++) {
+                const sub = { ...state };
+                delete sub[keys[i]];
+                const subKey = Object.keys(sub).sort().map(k => `${k}:${sub[k]}`).join(',');
+                if (strategyLibrary[subKey]) return strategyLibrary[subKey];
+            }
+            // 移除两个节点
+            for (let i = 0; i < keys.length; i++) {
+                for (let j = i+1; j < keys.length; j++) {
+                    const sub = { ...state };
+                    delete sub[keys[i]];
+                    delete sub[keys[j]];
+                    const subKey = Object.keys(sub).sort().map(k => `${k}:${sub[k]}`).join(',');
+                    if (strategyLibrary[subKey]) return strategyLibrary[subKey];
+                }
+            }
+            return { name: '综合建议', strategy: '当前状态组合未预置专用策略，建议综合评估各翻转模块，优先解决标记为"紧急"的卡点。', priority: 'medium' };
+        }
+
+        // ============================================================
+        //  6. 权限控制
+        // ============================================================
+        document.querySelectorAll('.perm-check').forEach(chk => {
+            chk.addEventListener('change', function() {
+                const group = this.dataset.group;
+                allKeys.forEach(k => {
+                    // 检查节点是否属于该group
+                    const node = findNodeByGroup(treeData, k, group);
+                    if (node) permMap.set(k, this.checked);
+                });
+                updateUI();
+            });
+        });
+
+        function findNodeByGroup(node, key, group) {
+            if (node.key === key && node.group === group) return node;
+            if (node.children) {
+                for (let c of node.children) {
+                    const found = findNodeByGroup(c, key, group);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        // ============================================================
+        //  7. 按钮事件
+        // ============================================================
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            allKeys.forEach(k => flipMap.set(k, false));
+            document.querySelectorAll('.card-wrapper').forEach(el => el.classList.remove('flipped'));
+            updateUI();
+        });
+
+        document.getElementById('flipAllBtn').addEventListener('click', function() {
+            document.querySelectorAll('.card-wrapper').forEach(el => {
+                const key = el.dataset.key;
+                if (permMap.get(key)) {
+                    const current = flipMap.get(key);
+                    flipMap.set(key, !current);
+                    el.classList.toggle('flipped');
+                }
+            });
+            updateUI();
+        });
+
+        // ============================================================
+        //  8. 启动
+        // ============================================================
+        renderTree();
+    </script>
+    <div style="position:fixed;bottom:6px;right:12px;font-size:11px;color:#888;opacity:0.6;z-index:9999;pointer-events:none;font-family:sans-serif;">
+        3D模型 © 张大宝 · MIT
+    </div>
+</body>
+</body>
+</html>

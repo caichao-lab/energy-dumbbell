@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 版权声明：3D酒杯能量模型 · 原创作者：张大宝 · MIT 协议开源 -->
+    <title>3D酒杯能量模型</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>酒杯模型 · 稀疏网格</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #0a0a1a; font-family: 'Microsoft YaHei', sans-serif; }
+        canvas { display: block; }
+        #tooltip {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+            letter-spacing: 2px;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.08);
+            pointer-events: none;
+            z-index: 10;
+            text-align: center;
+        }
+        #tooltip span { color: #ffd700; }
+    </style>
+</head>
+<body>
+
+    <div id="tooltip">🖱 拖拽旋转 · 滚轮缩放 · <span>稀疏网格</span> · 能量哑铃</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // --- 初始化场景 ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a1a);
+
+        const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(10, 4, 12);
+        camera.lookAt(0, 0.8, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        document.body.appendChild(renderer.domElement);
+
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        document.body.appendChild(labelRenderer.domElement);
+
+        // --- 控制器 ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.6;
+        controls.minDistance = 5;
+        controls.maxDistance = 25;
+        controls.target.set(0, 0.8, 0);
+        controls.update();
+
+        // --- 灯光 ---
+        const ambient = new THREE.AmbientLight(0x404070, 0.6);
+        scene.add(ambient);
+
+        const main = new THREE.DirectionalLight(0xffeedd, 2.5);
+        main.position.set(6, 12, 8);
+        main.castShadow = true;
+        scene.add(main);
+
+        const fill = new THREE.DirectionalLight(0x4488ff, 0.8);
+        fill.position.set(-6, 0, 6);
+        scene.add(fill);
+
+        const back = new THREE.DirectionalLight(0x8855ff, 0.6);
+        back.position.set(0, -4, -10);
+        scene.add(back);
+
+        const bottom = new THREE.PointLight(0xffd700, 0.8, 15);
+        bottom.position.set(0, -3, 0);
+        scene.add(bottom);
+
+        // --- 标签函数 ---
+        function createLabel(text, color = '#ffffff', size = '15px') {
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.color = color;
+            div.style.fontSize = size;
+            div.style.fontWeight = '600';
+            div.style.fontFamily = 'Microsoft YaHei, sans-serif';
+            div.style.textShadow = '0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.6)';
+            div.style.letterSpacing = '1px';
+            div.style.background = 'rgba(0,0,0,0.7)';
+            div.style.padding = '4px 14px';
+            div.style.borderRadius = '16px';
+            div.style.backdropFilter = 'blur(4px)';
+            div.style.border = '1px solid rgba(255,255,255,0.15)';
+            return new CSS2DObject(div);
+        }
+
+        // ============================================================
+        // 外部包裹：稀疏线框球
+        // ============================================================
+        const centerY = 0.8;
+        const outerRadius = 5.8;
+        const innerRadius = 4.8;
+
+        const outerSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(outerRadius, 32, 24),
+            new THREE.MeshBasicMaterial({
+                color: 0x1a2a3a,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.2,
+            })
+        );
+        outerSphere.position.y = centerY;
+        scene.add(outerSphere);
+
+        const innerSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(innerRadius, 28, 20),
+            new THREE.MeshBasicMaterial({
+                color: 0x2a3a4a,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.2,
+            })
+        );
+        innerSphere.position.y = centerY;
+        scene.add(innerSphere);
+
+        const labelOuter = createLabel('外层包裹（暗轮廓）', '#556677', '14px');
+        labelOuter.position.set(7.5, 2.5, 0);
+        scene.add(labelOuter);
+
+        const labelInner = createLabel('内层包裹（暗轮廓）', '#667788', '14px');
+        labelInner.position.set(-7.5, 2.5, 0);
+        scene.add(labelInner);
+
+        // ============================================================
+        // 酒杯本体
+        // ============================================================
+        const wineGlassGroup = new THREE.Group();
+
+        const funnelGeo = new THREE.CylinderGeometry(2.8, 1.2, 1.8, 48, 1, true);
+        const funnelMat = new THREE.MeshPhysicalMaterial({
+            color: 0x8866ff,
+            emissive: 0x4422aa,
+            emissiveIntensity: 0.15,
+            transparent: true,
+            opacity: 0.3,
+            roughness: 0.1,
+            metalness: 0.3,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+        });
+        const funnel = new THREE.Mesh(funnelGeo, funnelMat);
+        funnel.position.y = 1.8;
+        wineGlassGroup.add(funnel);
+
+        const rim = new THREE.Mesh(
+            new THREE.TorusGeometry(2.8, 0.04, 16, 48),
+            new THREE.MeshPhysicalMaterial({
+                color: 0xaa88ff,
+                emissive: 0x6633cc,
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.8,
+            })
+        );
+        rim.position.y = 2.7;
+        rim.rotation.x = Math.PI / 2;
+        wineGlassGroup.add(rim);
+
+        const rimBottom = new THREE.Mesh(
+            new THREE.TorusGeometry(1.2, 0.03, 16, 32),
+            new THREE.MeshPhysicalMaterial({
+                color: 0x8866ff,
+                emissive: 0x4422aa,
+                emissiveIntensity: 0.2,
+                transparent: true,
+                opacity: 0.6,
+            })
+        );
+        rimBottom.position.y = 0.9;
+        rimBottom.rotation.x = Math.PI / 2;
+        wineGlassGroup.add(rimBottom);
+
+        for (let i = 0; i < 20; i++) {
+            const t = Math.random();
+            const r = 1.2 + t * 1.6;
+            const angle = Math.random() * Math.PI * 2;
+            const y = 0.9 + t * 1.8;
+            const particle = new THREE.Mesh(
+                new THREE.SphereGeometry(0.05, 6, 6),
+                new THREE.MeshBasicMaterial({
+                    color: 0xaa88ff,
+                    transparent: true,
+                    opacity: 0.5 + Math.random() * 0.3,
+                })
+            );
+            particle.position.set(Math.cos(angle) * r, y, Math.sin(angle) * r);
+            wineGlassGroup.add(particle);
+        }
+
+        const channel = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.0, 1.0, 1.6, 32),
+            new THREE.MeshPhysicalMaterial({
+                color: 0x7755dd,
+                emissive: 0x331188,
+                emissiveIntensity: 0.15,
+                transparent: true,
+                opacity: 0.25,
+                roughness: 0.2,
+                metalness: 0.4,
+                side: THREE.DoubleSide,
+                depthWrite: false,
+            })
+        );
+        channel.position.y = 0.0;
+        wineGlassGroup.add(channel);
+
+        for (let i = -1; i <= 1; i++) {
+            const ring = new THREE.Mesh(
+                new THREE.TorusGeometry(1.05, 0.03, 12, 32),
+                new THREE.MeshPhysicalMaterial({
+                    color: 0x8866ff,
+                    emissive: 0x4422aa,
+                    emissiveIntensity: 0.2,
+                    transparent: true,
+                    opacity: 0.5,
+                })
+            );
+            ring.position.y = i * 0.7;
+            ring.rotation.x = Math.PI / 2;
+            wineGlassGroup.add(ring);
+        }
+
+        const base = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.2, 3.2, 2.8, 48, 1, true),
+            new THREE.MeshPhysicalMaterial({
+                color: 0xffd700,
+                emissive: 0x886600,
+                emissiveIntensity: 0.15,
+                transparent: true,
+                opacity: 0.2,
+                roughness: 0.1,
+                metalness: 0.5,
+                side: THREE.DoubleSide,
+                depthWrite: false,
+            })
+        );
+        base.position.y = -1.6;
+        wineGlassGroup.add(base);
+
+        const baseRing = new THREE.Mesh(
+            new THREE.TorusGeometry(3.2, 0.05, 16, 48),
+            new THREE.MeshPhysicalMaterial({
+                color: 0xffd700,
+                emissive: 0xaa8800,
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.6,
+            })
+        );
+        baseRing.position.y = -3.0;
+        baseRing.rotation.x = Math.PI / 2;
+        wineGlassGroup.add(baseRing);
+
+        const baseGlow = new THREE.Mesh(
+            new THREE.CircleGeometry(3.0, 48),
+            new THREE.MeshBasicMaterial({
+                color: 0xffd700,
+                transparent: true,
+                opacity: 0.08,
+                side: THREE.DoubleSide,
+            })
+        );
+        baseGlow.position.y = -3.0;
+        baseGlow.rotation.x = -Math.PI / 2;
+        wineGlassGroup.add(baseGlow);
+
+        wineGlassGroup.position.set(0, 0.8, 0);
+        scene.add(wineGlassGroup);
+
+        const labelFunnel = createLabel('成交漏斗', '#aa88ff', '13px');
+        labelFunnel.position.set(3.8, 3.2, 0);
+        scene.add(labelFunnel);
+
+        const labelChannel = createLabel('成交通道', '#8866ff', '13px');
+        labelChannel.position.set(-3.2, 0.6, 0);
+        scene.add(labelChannel);
+
+        const labelBase = createLabel('利润底座', '#ffd700', '13px');
+        labelBase.position.set(4.2, -2.4, 0);
+        scene.add(labelBase);
+
+        // ============================================================
+        // 两颗葡萄 —— 上移到漏斗内部最顶部位置
+        // 漏斗口世界坐标 y=3.5，球体中心 y=2.7（球顶 3.3，完全在内部）
+        // ============================================================
+        const productGroup = new THREE.Group();
+        const grapeGeo = new THREE.SphereGeometry(0.6, 24, 24);
+        const grapeMat = new THREE.MeshPhysicalMaterial({
+            color: 0xff6633,
+            emissive: 0x881100,
+            emissiveIntensity: 0.2,
+            roughness: 0.2,
+            metalness: 0.1,
+            clearcoat: 0.3,
+            clearcoatRoughness: 0.4,
+            transparent: true,
+            opacity: 0.95,
+        });
+        const grape1 = new THREE.Mesh(grapeGeo, grapeMat);
+        grape1.castShadow = true;
+        productGroup.add(grape1);
+
+        const highlight1 = new THREE.Mesh(
+            new THREE.SphereGeometry(0.2, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0xffaa77, transparent: true, opacity: 0.5 })
+        );
+        highlight1.position.set(0.25, 0.25, 0.35);
+        productGroup.add(highlight1);
+
+        const labelProduct = createLabel('产品（推力）', '#ff6633', '13px');
+        labelProduct.position.set(0, -1.2, 0);
+        productGroup.add(labelProduct);
+
+        // 位置：y=2.7（球顶 3.3，低于口沿 3.5），x=-1.2
+        productGroup.position.set(-1.2, 2.7, 0);
+        scene.add(productGroup);
+
+        const customerGroup = new THREE.Group();
+        const grapeMat2 = new THREE.MeshPhysicalMaterial({
+            color: 0x33ccff,
+            emissive: 0x004488,
+            emissiveIntensity: 0.2,
+            roughness: 0.2,
+            metalness: 0.1,
+            clearcoat: 0.3,
+            clearcoatRoughness: 0.4,
+            transparent: true,
+            opacity: 0.95,
+        });
+        const grape2 = new THREE.Mesh(grapeGeo, grapeMat2);
+        grape2.castShadow = true;
+        customerGroup.add(grape2);
+
+        const highlight2 = new THREE.Mesh(
+            new THREE.SphereGeometry(0.2, 12, 12),
+            new THREE.MeshBasicMaterial({ color: 0x88ddff, transparent: true, opacity: 0.5 })
+        );
+        highlight2.position.set(-0.25, 0.25, 0.35);
+        customerGroup.add(highlight2);
+
+        const labelCustomer = createLabel('客户（拉力）', '#33ccff', '13px');
+        labelCustomer.position.set(0, -1.2, 0);
+        customerGroup.add(labelCustomer);
+
+        customerGroup.position.set(1.2, 2.7, 0);
+        scene.add(customerGroup);
+
+        // ============================================================
+        // 三波球体
+        // ============================================================
+        const sphereGroup = new THREE.Group();
+
+        const sphere = new THREE.Mesh(
+            new THREE.SphereGeometry(1.6, 48, 48),
+            new THREE.MeshPhysicalMaterial({
+                color: 0xffd700,
+                emissive: 0x886600,
+                emissiveIntensity: 0.15,
+                transparent: true,
+                opacity: 0.25,
+                roughness: 0.1,
+                metalness: 0.3,
+                side: THREE.DoubleSide,
+                depthWrite: false,
+            })
+        );
+        sphereGroup.add(sphere);
+
+        const wire = new THREE.Mesh(
+            new THREE.SphereGeometry(1.6, 16, 12),
+            new THREE.MeshBasicMaterial({
+                color: 0xffdd44,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.15,
+            })
+        );
+        sphereGroup.add(wire);
+
+        const core = new THREE.Mesh(
+            new THREE.SphereGeometry(0.25, 16, 16),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 })
+        );
+        sphereGroup.add(core);
+
+        const glowCore = new THREE.Mesh(
+            new THREE.SphereGeometry(0.4, 16, 16),
+            new THREE.MeshBasicMaterial({ color: 0xffdd44, transparent: true, opacity: 0.3 })
+        );
+        sphereGroup.add(glowCore);
+
+        const waves = [];
+        const waveColors = [0xff6644, 0x44ddff, 0xffd700];
+        for (let w = 0; w < 3; w++) {
+            const waveGroup = new THREE.Group();
+            const rings = [];
+            for (let i = 0; i < 8; i++) {
+                const r = 0.6 + i * 0.25;
+                const ring = new THREE.Mesh(
+                    new THREE.TorusGeometry(r, 0.02, 8, 32),
+                    new THREE.MeshBasicMaterial({
+                        color: waveColors[w],
+                        transparent: true,
+                        opacity: 0.3 + (i / 8) * 0.3,
+                    })
+                );
+                ring.rotation.x = Math.PI / 2 + (i * 0.05);
+                ring.position.y = 0;
+                waveGroup.add(ring);
+                rings.push({ mesh: ring, baseRadius: r, phase: i * 0.5 });
+            }
+            waveGroup.userData = { rings, offset: w * 2.1 };
+            sphereGroup.add(waveGroup);
+            waves.push(waveGroup);
+        }
+
+        const labelSphere = createLabel('三波球体（利润核心）', '#ffd700', '14px');
+        labelSphere.position.set(2.5, -1.8, 0);
+        sphereGroup.add(labelSphere);
+
+        const labelCore = createLabel('利润核', '#ffffff', '12px');
+        labelCore.position.set(1.0, 0.8, 0);
+        sphereGroup.add(labelCore);
+
+        sphereGroup.position.set(0, -1.8, 0);
+        scene.add(sphereGroup);
+
+        // ============================================================
+        // 闲置体
+        // ============================================================
+        for (let i = 0; i < 15; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const r = 0.8 + Math.random() * 1.8;
+            const y = 0.5 + Math.random() * 2.0;
+            const p = new THREE.Mesh(
+                new THREE.SphereGeometry(0.04, 6, 6),
+                new THREE.MeshBasicMaterial({
+                    color: 0x88dd88,
+                    transparent: true,
+                    opacity: 0.15 + Math.random() * 0.15,
+                })
+            );
+            p.position.set(Math.cos(angle) * r, y + 0.8, Math.sin(angle) * r);
+            scene.add(p);
+        }
+
+        for (let i = 0; i < 15; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const r = 4.2 + Math.random() * 0.8;
+            const y = -0.5 + Math.random() * 2.5;
+            const p = new THREE.Mesh(
+                new THREE.SphereGeometry(0.05, 6, 6),
+                new THREE.MeshBasicMaterial({
+                    color: 0x88ddff,
+                    transparent: true,
+                    opacity: 0.1 + Math.random() * 0.1,
+                })
+            );
+            p.position.set(Math.cos(angle) * r, y + 0.8, Math.sin(angle) * r);
+            scene.add(p);
+        }
+
+        const labelIdle1 = createLabel('闲置体一（杯内）', '#88dd88', '12px');
+        labelIdle1.position.set(-2.8, 3.6, 2.5);
+        scene.add(labelIdle1);
+
+        const labelIdle2 = createLabel('闲置体二（杯外）', '#88ddff', '12px');
+        labelIdle2.position.set(4.2, 2.0, 3.5);
+        scene.add(labelIdle2);
+
+        // ============================================================
+        // 暗通道
+        // ============================================================
+        const tubePoints = [
+            new THREE.Vector3(0, 2.2, 0),
+            new THREE.Vector3(0, 0.2, 0),
+            new THREE.Vector3(0, -0.5, 0),
+        ];
+        const tubeCurve = new THREE.CatmullRomCurve3(tubePoints);
+        const tube = new THREE.Mesh(
+            new THREE.TubeGeometry(tubeCurve, 20, 0.06, 6, false),
+            new THREE.MeshPhysicalMaterial({
+                color: 0xffd700,
+                emissive: 0x886600,
+                emissiveIntensity: 0.3,
+                transparent: true,
+                opacity: 0.25,
+                roughness: 0.3,
+                metalness: 0.5,
+                side: THREE.DoubleSide,
+                depthWrite: false,
+            })
+        );
+        scene.add(tube);
+
+        const flowParticles = [];
+        for (let i = 0; i < 12; i++) {
+            const t = i / 12;
+            const p = new THREE.Mesh(
+                new THREE.SphereGeometry(0.05, 6, 6),
+                new THREE.MeshBasicMaterial({
+                    color: 0xffd700,
+                    transparent: true,
+                    opacity: 0.4 + Math.random() * 0.3,
+                })
+            );
+            const pos = tubeCurve.getPoint(t);
+            p.position.copy(pos);
+            p.userData = { t, speed: 0.005 + Math.random() * 0.005 };
+            scene.add(p);
+            flowParticles.push(p);
+        }
+
+        const labelTube = createLabel('暗通道（直驱利润核）', '#ffd700', '12px');
+        labelTube.position.set(-1.2, 0.8, 1.5);
+        scene.add(labelTube);
+
+        // ============================================================
+        // 复制启动
+        // ============================================================
+        const copyParticles = [];
+        for (let i = 0; i < 20; i++) {
+            const angle = (i / 20) * Math.PI * 2 + Math.random() * 0.2;
+            const r = 2.0 + Math.random() * 1.5;
+            const p = new THREE.Mesh(
+                new THREE.SphereGeometry(0.05, 6, 6),
+                new THREE.MeshBasicMaterial({
+                    color: 0xff6644,
+                    transparent: true,
+                    opacity: 0.2 + Math.random() * 0.2,
+                })
+            );
+            p.position.set(Math.cos(angle) * r, -3.8 + Math.random() * 0.3, Math.sin(angle) * r);
+            scene.add(p);
+            copyParticles.push(p);
+        }
+
+        const labelCopy = createLabel('复制启动（量变→质变）', '#ff6644', '14px');
+        labelCopy.position.set(0, -4.6, 0);
+        scene.add(labelCopy);
+
+        // ============================================================
+        // 动画循环
+        // ============================================================
+        let time = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+            controls.update();
+
+            // 葡萄晃动（基于新位置）
+            const swayX = Math.sin(time * 0.8) * 0.15;
+            const swayZ = Math.cos(time * 0.9) * 0.08;
+            productGroup.position.x = -1.2 + swayX;
+            productGroup.position.z = swayZ;
+            productGroup.rotation.z = Math.sin(time * 0.8) * 0.04;
+
+            const swayX2 = Math.sin(time * 0.6 + 0.5) * 0.15;
+            const swayZ2 = Math.cos(time * 0.7 + 0.3) * 0.08;
+            customerGroup.position.x = 1.2 + swayX2;
+            customerGroup.position.z = swayZ2;
+            customerGroup.rotation.z = -Math.sin(time * 0.6 + 0.3) * 0.04;
+
+            const breathe = 1 + Math.sin(time * 0.8) * 0.02;
+            productGroup.scale.set(breathe, breathe, breathe);
+            customerGroup.scale.set(breathe, breathe, breathe);
+
+            waves.forEach((waveGroup) => {
+                const rings = waveGroup.userData.rings;
+                const offset = waveGroup.userData.offset;
+                rings.forEach((ringData, i) => {
+                    const scale = 1 + Math.sin(time * 0.6 + i * 0.2 + offset) * 0.1;
+                    ringData.mesh.scale.set(scale, scale, scale);
+                    ringData.mesh.material.opacity = 0.2 + (i / 8) * 0.2 +
+                        Math.sin(time * 0.7 + i * 0.2 + offset) * 0.05;
+                    ringData.mesh.rotation.x = Math.PI / 2 + Math.sin(time * 0.5 + i * 0.1 + offset) * 0.05;
+                });
+            });
+
+            sphere.material.emissiveIntensity = 0.12 + Math.sin(time * 0.5) * 0.06;
+
+            flowParticles.forEach((p) => {
+                p.userData.t += p.userData.speed;
+                if (p.userData.t > 1) p.userData.t = 0;
+                const pos = tubeCurve.getPoint(p.userData.t);
+                p.position.copy(pos);
+            });
+
+            baseRing.material.emissiveIntensity = 0.2 + Math.sin(time * 0.7) * 0.1;
+
+            copyParticles.forEach((p, i) => {
+                p.material.opacity = 0.15 + Math.sin(time * 0.5 + i * 0.5) * 0.15;
+            });
+
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        renderer.domElement.addEventListener('click', () => {
+            controls.autoRotate = !controls.autoRotate;
+        });
+
+        console.log('🎯 稀疏网格模型已加载（葡萄移至漏斗内部顶端）');
+    </script>
+    <div style="position:fixed;bottom:6px;right:12px;font-size:11px;color:#888;opacity:0.6;z-index:9999;pointer-events:none;font-family:sans-serif;">
+        3D模型 © 张大宝 · MIT
+    </div>
+</body>
+</body>
+</html>

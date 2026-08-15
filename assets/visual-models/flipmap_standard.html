@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 版权声明：3D酒杯能量模型 · 原创作者：张大宝 · MIT 协议开源 -->
+    <title>3D酒杯能量模型</title>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>翻转导图 · 纯CSS版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #eef2f7;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        /* 顶栏 */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .toolbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toolbar .brand h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0b1e33;
+        }
+        .toolbar .brand span {
+            background: #0b1e33;
+            color: white;
+            font-size: 12px;
+            padding: 2px 14px;
+            border-radius: 40px;
+        }
+        .toolbar .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            border: 1px solid #d0d9e4;
+            background: white;
+            padding: 6px 18px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:hover {
+            background: #0b1e33;
+            color: white;
+            border-color: #0b1e33;
+        }
+        .btn-primary {
+            background: #0b1e33;
+            color: white;
+            border-color: #0b1e33;
+        }
+        .btn-primary:hover {
+            background: #1a3550;
+        }
+        .badge {
+            background: #eef2f7;
+            padding: 4px 16px;
+            border-radius: 60px;
+            font-size: 13px;
+            color: #3e5a76;
+        }
+        .badge strong {
+            color: #0b1e33;
+        }
+
+        /* 主体布局：树形内容 + 右侧权限 */
+        .main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        .tree-container {
+            flex: 1;
+            padding: 20px 30px 20px 20px;
+            overflow: auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        /* 树形结构用flex实现 */
+        .tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .root-node {
+            margin-bottom: 20px;
+        }
+        .branch {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .branch-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 150px;
+        }
+        .group-label {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a2d44;
+            margin-bottom: 12px;
+            background: rgba(255,255,255,0.6);
+            padding: 4px 16px;
+            border-radius: 40px;
+            backdrop-filter: blur(2px);
+        }
+        .leaf-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            align-items: center;
+        }
+
+        /* 卡片翻转样式 */
+        .card-wrapper {
+            perspective: 800px;
+            width: 160px;
+            height: 100px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .card-wrapper.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .flipper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+        .card-wrapper.flipped .flipper {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .card-front {
+            background: white;
+            color: #0b1e33;
+        }
+        .card-front .icon {
+            font-size: 26px;
+            margin-bottom: 4px;
+        }
+        .card-front .title {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .card-front .sub {
+            font-size: 12px;
+            color: #5e7a97;
+            margin-top: 2px;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            background: #0b1e33;
+            color: white;
+        }
+        .card-back .icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+            opacity: 0.7;
+        }
+        .card-back .title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .card-back .sub {
+            font-size: 12px;
+            color: rgba(255,255,255,0.65);
+            margin-top: 2px;
+        }
+        .card-back .badge {
+            margin-top: 6px;
+            background: rgba(255,255,255,0.12);
+            padding: 2px 12px;
+            border-radius: 40px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.8);
+        }
+        /* 小标签状态 */
+        .status-tag {
+            font-size: 10px;
+            color: #7a8fa3;
+            margin-top: 4px;
+        }
+
+        /* 右侧权限面板 */
+        .perm-panel {
+            width: 200px;
+            background: white;
+            border-left: 1px solid rgba(0,0,0,0.05);
+            padding: 20px 18px;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+        .perm-panel h4 {
+            font-size: 14px;
+            color: #3e5a76;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        .perm-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f4f9;
+        }
+        .perm-item label {
+            font-size: 14px;
+            color: #1a2d44;
+            cursor: pointer;
+        }
+        .perm-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #0b1e33;
+            cursor: pointer;
+        }
+        .perm-hint {
+            font-size: 12px;
+            color: #7a8fa3;
+            margin-top: 16px;
+            border-top: 1px solid #eef2f7;
+            padding-top: 14px;
+            text-align: center;
+        }
+
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .branch { gap: 30px; }
+            .card-wrapper { width: 140px; height: 90px; }
+            .perm-panel { width: 160px; }
+        }
+        @media (max-width: 700px) {
+            .main { flex-direction: column; }
+            .perm-panel {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid rgba(0,0,0,0.05);
+                padding: 12px 16px;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 8px;
+            }
+            .perm-panel h4 { margin-bottom: 0; width: 100%; }
+            .perm-item { border-bottom: none; padding: 4px 8px; }
+            .tree-container { padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="brand">
+            <h1>🌳 翻转导图 · 纯CSS</h1>
+            <span>无需外库</span>
+        </div>
+        <div class="actions">
+            <span class="badge">🔄 已翻转 <strong id="flipCounter">0</strong></span>
+            <button class="btn" id="resetBtn">⟲ 全部复位</button>
+            <button class="btn btn-primary" id="flipAllBtn">⇄ 全部翻转</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="tree-container" id="treeContainer">
+            <!-- 树形结构由 JS 生成 -->
+        </div>
+        <div class="perm-panel" id="permPanel">
+            <h4>⚙️ 翻转权限</h4>
+            <div class="perm-item">
+                <label><input type="checkbox" class="perm-check" data-group="root" checked /> 根节点</label>
+            </div>
+            <div class="perm-item">
+                <label><input type="checkbox" class="perm-check" data-group="group1" checked /> 看人</label>
+            </div>
+            <div class="perm-item">
+                <label><input type="checkbox" class="perm-check" data-group="group2" checked /> 看货</label>
+            </div>
+            <div class="perm-item">
+                <label><input type="checkbox" class="perm-check" data-group="group3" checked /> 看场</label>
+            </div>
+            <div class="perm-hint">✔ 勾选 = 可翻转</div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  1. 数据定义
+        // ============================================================
+        const treeData = {
+            key: 'root',
+            label: '营销4.0 诊断',
+            frontIcon: '🧭',
+            frontTitle: '营销4.0 诊断',
+            frontSub: '全面诊断框架',
+            backIcon: '🔍',
+            backTitle: '营销4.0 · 盲区',
+            backSub: '扫描潜在卡点',
+            group: 'root',
+            children: [{
+                key: 'group1',
+                label: '看人',
+                frontIcon: '👤',
+                frontTitle: '看人',
+                frontSub: '客户三维度',
+                backIcon: '⚠️',
+                backTitle: '人 · 卡点',
+                backSub: '需求/购买/支配',
+                group: 'group1',
+                children: [
+                    { key: 'g1_1', frontIcon: '🎯', frontTitle: '需求力·强', frontSub: '明确痛点',
+                        backIcon: '🌀', backTitle: '需求力·弱', backSub: '需前置教育', group: 'group1' },
+                    { key: 'g1_2', frontIcon: '💰', frontTitle: '购买力·充足', frontSub: '预算覆盖',
+                        backIcon: '🔒', backTitle: '购买力·受限', backSub: '考虑分期', group: 'group1' },
+                    { key: 'g1_3', frontIcon: '🧠', frontTitle: '支配力·自主', frontSub: '决策无阻',
+                        backIcon: '⛓️', backTitle: '支配力·受阻', backSub: '需解决决策链', group: 'group1' }
+                ]
+            }, {
+                key: 'group2',
+                label: '看货',
+                frontIcon: '📦',
+                frontTitle: '看货',
+                frontSub: '竞争与标准',
+                backIcon: '⚡',
+                backTitle: '货 · 竞争',
+                backSub: '盲区与错配',
+                group: 'group2',
+                children: [
+                    { key: 'g2_1', frontIcon: '📊', frontTitle: '竞争·多维', frontSub: '全面洞察',
+                        backIcon: '🔍', backTitle: '竞争·盲区', backSub: '需市场调研', group: 'group2' },
+                    { key: 'g2_2', frontIcon: '📏', frontTitle: '标准·清晰', frontSub: '行业标杆',
+                        backIcon: '⚖️', backTitle: '标准·缺失', backSub: '建立可量化标准', group: 'group2' },
+                    { key: 'g2_3', frontIcon: '✅', frontTitle: '货·适配', frontSub: '精准匹配',
+                        backIcon: '❌', backTitle: '货·错配', backSub: '调整产品组合', group: 'group2' }
+                ]
+            }, {
+                key: 'group3',
+                label: '看场',
+                frontIcon: '🏟️',
+                frontTitle: '看场',
+                frontSub: '信任与转化',
+                backIcon: '🔥',
+                backTitle: '场 · 转化',
+                backSub: '信任/体验/价值',
+                group: 'group3',
+                children: [
+                    { key: 'g3_1', frontIcon: '🤝', frontTitle: '信任·牢固', frontSub: '深度信赖',
+                        backIcon: '🛡️', backTitle: '信任·脆弱', backSub: '需要兜底背书', group: 'group3' },
+                    { key: 'g3_2', frontIcon: '✨', frontTitle: '体验·深度', frontSub: '亲自验证',
+                        backIcon: '❓', backTitle: '体验·缺失', backSub: '设计免费试用', group: 'group3' },
+                    { key: 'g3_3', frontIcon: '💎', frontTitle: '价值·清晰', frontSub: '客户认可',
+                        backIcon: '📉', backTitle: '价值·模糊', backSub: '强化对比呈现', group: 'group3' }
+                ]
+            }]
+        };
+
+        // ============================================================
+        //  2. 状态管理
+        // ============================================================
+        const flipMap = new Map();       // key -> true/false (true=反面)
+        const permMap = new Map();       // key -> true/false (true=允许翻转)
+
+        // 收集所有节点key
+        function collectKeys(node, list) {
+            list.push(node.key);
+            if (node.children) node.children.forEach(c => collectKeys(c, list));
+        }
+        const allKeys = [];
+        collectKeys(treeData, allKeys);
+        allKeys.forEach(k => { flipMap.set(k, false); permMap.set(k, true); });
+
+        // ============================================================
+        //  3. 渲染树
+        // ============================================================
+        const container = document.getElementById('treeContainer');
+        const counterEl = document.getElementById('flipCounter');
+
+        function renderTree() {
+            container.innerHTML = '';
+            const treeDiv = document.createElement('div');
+            treeDiv.className = 'tree';
+
+            // 根节点
+            const rootWrapper = document.createElement('div');
+            rootWrapper.className = 'root-node';
+            rootWrapper.appendChild(createCard(treeData, true));
+            treeDiv.appendChild(rootWrapper);
+
+            // 三大分支
+            const branchDiv = document.createElement('div');
+            branchDiv.className = 'branch';
+            treeData.children.forEach(group => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'branch-group';
+                const label = document.createElement('div');
+                label.className = 'group-label';
+                label.textContent = group.label;
+                groupDiv.appendChild(label);
+
+                const leafList = document.createElement('div');
+                leafList.className = 'leaf-list';
+                group.children.forEach(leaf => {
+                    leafList.appendChild(createCard(leaf, false));
+                });
+                groupDiv.appendChild(leafList);
+                branchDiv.appendChild(groupDiv);
+            });
+            treeDiv.appendChild(branchDiv);
+            container.appendChild(treeDiv);
+            updateCounter();
+            applyPermissions();
+        }
+
+        // 创建一张卡片
+        function createCard(node, isRoot) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card-wrapper';
+            wrapper.dataset.key = node.key;
+            if (flipMap.get(node.key)) wrapper.classList.add('flipped');
+
+            const flipper = document.createElement('div');
+            flipper.className = 'flipper';
+
+            // 正面
+            const front = document.createElement('div');
+            front.className = 'card-face card-front';
+            front.innerHTML = `
+                <div class="icon">${node.frontIcon}</div>
+                <div class="title">${node.frontTitle}</div>
+                <div class="sub">${node.frontSub || ''}</div>
+            `;
+
+            // 反面
+            const back = document.createElement('div');
+            back.className = 'card-face card-back';
+            back.innerHTML = `
+                <div class="icon">${node.backIcon}</div>
+                <div class="title">${node.backTitle}</div>
+                <div class="sub">${node.backSub || ''}</div>
+                ${node.backBadge ? `<div class="badge">${node.backBadge}</div>` : ''}
+            `;
+
+            flipper.appendChild(front);
+            flipper.appendChild(back);
+            wrapper.appendChild(flipper);
+
+            // 点击翻转
+            wrapper.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const key = this.dataset.key;
+                if (!permMap.get(key)) return;  // 被锁定
+                const current = flipMap.get(key);
+                flipMap.set(key, !current);
+                this.classList.toggle('flipped');
+                updateCounter();
+            });
+
+            return wrapper;
+        }
+
+        // ============================================================
+        //  4. 计数 & 权限
+        // ============================================================
+        function updateCounter() {
+            let count = 0;
+            for (let [k, v] of flipMap) if (v) count++;
+            counterEl.textContent = count;
+        }
+
+        function applyPermissions() {
+            document.querySelectorAll('.card-wrapper').forEach(el => {
+                const key = el.dataset.key;
+                const canFlip = permMap.get(key) !== false;
+                if (!canFlip) el.classList.add('disabled');
+                else el.classList.remove('disabled');
+            });
+        }
+
+        // 权限复选框
+        document.querySelectorAll('.perm-check').forEach(chk => {
+            chk.addEventListener('change', function() {
+                const group = this.dataset.group;
+                // 遍历所有节点，属于该group的设置权限
+                allKeys.forEach(k => {
+                    // 简单处理：通过查找节点所属group（这里偷懒，在数据中遍历）
+                    const node = findNode(treeData, k);
+                    if (node && node.group === group) {
+                        permMap.set(k, this.checked);
+                    }
+                });
+                applyPermissions();
+            });
+        });
+
+        function findNode(root, key) {
+            if (root.key === key) return root;
+            if (root.children) {
+                for (let child of root.children) {
+                    const found = findNode(child, key);
+                    if (found) return found;
+                }
+            }
+            return null;
+        }
+
+        // ============================================================
+        //  5. 按钮事件
+        // ============================================================
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            for (let k of allKeys) flipMap.set(k, false);
+            document.querySelectorAll('.card-wrapper').forEach(el => el.classList.remove('flipped'));
+            updateCounter();
+        });
+
+        document.getElementById('flipAllBtn').addEventListener('click', function() {
+            document.querySelectorAll('.card-wrapper').forEach(el => {
+                const key = el.dataset.key;
+                if (permMap.get(key)) {
+                    const current = flipMap.get(key);
+                    flipMap.set(key, !current);
+                    el.classList.toggle('flipped');
+                }
+            });
+            updateCounter();
+        });
+
+        // ============================================================
+        //  6. 启动
+        // ============================================================
+        renderTree();
+    </script>
+    <div style="position:fixed;bottom:6px;right:12px;font-size:11px;color:#888;opacity:0.6;z-index:9999;pointer-events:none;font-family:sans-serif;">
+        3D模型 © 张大宝 · MIT
+    </div>
+</body>
+</body>
+</html>
