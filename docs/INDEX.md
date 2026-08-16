@@ -67,6 +67,15 @@ Demo Scripts
 2. `03_archive` 内所有内容仅用于溯源，旧规则、旧模型不再生效
 3. 禁止混合归档草稿与正式核心规则，避免逻辑冲突
 
+## 📖 延伸阅读
+
+以下文档不参与智能体推理，仅供人工阅读，帮助理解体系的哲学根基与学术框架：
+
+| 文档 | 说明 |
+|:---|:---|
+| [能量商业哲学宣言.md](./能量商业哲学宣言.md) | 体系的哲学根基：商业是能量场，经营者是逆熵者 |
+| [学术论文框架_能量商业哲学.md](./学术论文框架_能量商业哲学.md) | 完整的学术论文框架，含五维理论体系与文献综述 |
+
 ## Project Position（English Brief）
 Most open-source marketing agents only provide scattered prompts or independent thinking checklists.
 This repository releases a complete, self-consistent, iterable dynamic dialectical commercial reasoning system.
