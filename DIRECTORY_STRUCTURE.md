@@ -1,8 +1,8 @@
 # marketing-decision-agent-v6.2-history 目录结构
 
-> 生成时间: 2026-08-15 15:54:14
+> 生成时间: 2026-08-16 14:16:03
 
-> 根目录: `C:\Users\Administrator\Desktop\开源\仓库根目录\marketing-decision-agent-v6.2-history`
+> 根目录: `C:\Users\Administrator\Desktop\开源文档\仓库根目录20260816\marketing-decision-agent-v6.2-history`
 > 最大深度: 6 层
 
 ```
@@ -31,7 +31,7 @@ marketing-decision-agent-v6.2-history
 ├── dist/
 │   ├── 01_core/
 │   │   ├── 6.2纯净版完整加载包(单文件_新对话首条).md  [53.9KB]
-│   │   ├── 6.2纯净版完整加载包(单文件_新对话首条)_EN.md  [0B]
+│   │   ├── 6.2纯净版完整加载包(单文件_新对话首条)_EN.md  [9.0KB]
 │   │   ├── GPM、OPM双向视角释义.md  [2.4KB]
 │   │   ├── P心理矩阵.md  [2.8KB]
 │   │   ├── Q问题矩阵.md  [4.7KB]
@@ -77,8 +77,12 @@ marketing-decision-agent-v6.2-history
 │           ├── README.md  [346B]
 │           └── 科学的销售1.0-12.0营销导图迭代表.pdf  [54.6KB]
 ├── docs/
-│   ├── INDEX.md  [3.8KB]
-│   └── README_DETAIL.md  [1.2KB]
+│   ├── INDEX.md  [4.2KB]
+│   ├── README_DETAIL.md  [1.2KB]
+│   ├── 能量商业哲学学术论文框架.md  [15.9KB]
+│   ├── 能量商业哲学学术论文框架_EN.md  [20.7KB]
+│   ├── 能量商业哲学宣言.md  [7.4KB]
+│   └── 能量商业哲学宣言_EN.md  [9.6KB]
 ├── src/
 │   ├── AI推理源库/
 │   │   ├── 00_启动包与入口/
@@ -208,16 +212,16 @@ marketing-decision-agent-v6.2-history
 │       ├── 07_体系空间结构补充说明（酒杯模型）.md  [14.3KB]
 │       └── 08_能量哑铃营销利润和调节的形象原理.md  [6.6KB]
 ├── CHANGELOG.md  [3.0KB]
-├── DIRECTORY_STRUCTURE.md  [14.0KB]
-├── LICENSE.md  [1.1KB]
-├── README.md  [11.4KB]
-├── README_EN.md  [13.1KB]
+├── DIRECTORY_STRUCTURE.md  [14.2KB]
+├── LICENSE.txt  [1.0KB]
+├── README.md  [13.6KB]
+├── README_EN.md  [15.7KB]
 ├── Term_Glossary.md  [3.4KB]
 └── generate_tree.py  [7.7KB]
 ```
 
 ---
 
-**统计**: 共扫描了 207 个条目（目录/文件）
+**统计**: 共扫描了 211 个条目（目录/文件）
 
 *注: 被忽略的目录（`.git`, `__pycache__`, `node_modules` 等）已自动过滤*
