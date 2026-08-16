@@ -66,7 +66,7 @@ Energy Dumbbell Marketing System V6.2 | Marketing Decision Reasoning Agent [Hist
 ## 📚 仓库配套补充说明
 
 ### 1. 项目基础信息
-本仓库为能量哑铃营销体系 V6.2 历史存档开源仓库，全套文档压缩包总大小4.17MB，全部为Markdown文本（仅迭代导图文件为txt和pdf格式）。
+本仓库为能量哑铃营销体系 V6.2 历史存档开源仓库，全套文档压缩包总大小4.2MB，全部为Markdown文本（仅迭代导图文件为txt和pdf格式）。
 本版本为2026年7月定稿过渡旧版，新一代推理模型已完全重构，独立新建仓库发布，**本仓库不再迭代更新**。
 
 ### 2. 版本演化溯源
@@ -170,7 +170,7 @@ Energy Dumbbell Marketing System V6.2 | Marketing Decision Reasoning Agent [Hist
 ## 📥 文档下载分流
 
 - **源码主渠道（优先推荐 ）**：GitHub/Gitee 仓库克隆
-- **备用高速分流（全套4.17MB完整压缩包）**：
+- **备用高速分流（全套4.2MB完整压缩包）**：
 - **阿里云盘 **：阿里云盘：https://www.alipan.com/s/SDtrDn5CSgu
 - **夸克网盘 **：夸克网盘：https://pan.quark.cn/s/68946b332736
 
@@ -180,7 +180,7 @@ Energy Dumbbell Marketing System V6.2 | Marketing Decision Reasoning Agent [Hist
 
 - **版本**：6.2
 - **更新日期**：2026-08-14
-- **全套压缩包文档总大小**：4.17 MB
+- **全套压缩包文档总大小**：4.2 MB
 - **文件格式**： Markdown 文本
 - **Gitee平台**：https://gitee.com/caichao-lab/energy-dumbbell
 - **Github平台**：https://github.com/caichao-lab/energy-dumbbell
