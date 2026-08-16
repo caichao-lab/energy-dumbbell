@@ -81,7 +81,7 @@ The system traces its roots back to the original *Shang Shen Marketing Science* 
 
 ### 4. File Selection Recommendations
 - Deep development: Use the full package at `src/AI推理库/`
-- Quick start for beginners: Use `dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md`
+- Quick start for beginners: Use  [`dist/01_core/`](./dist/01_core/), find [`6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md)
 - ⚠️ Do not mix launch packages from different sources — rule validation standards may differ
 
 ---
@@ -91,7 +91,7 @@ The system traces its roots back to the original *Shang Shen Marketing Science* 
 **The simplest way:**
 
 1. Open any LLM: ChatGPT / Claude / DeepSeek / Kimi / Qwen
-2. From [`dist/01_core/`](./dist/01_core/), find [`6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md)
+2. From dist/01_core/ find [`6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md)
 3. Copy the entire content and paste it into a new conversation, then send it
 4. Wait for the model to load, then type or speak your business problem
 5. The system will automatically output a complete diagnostic strategy report
@@ -102,7 +102,7 @@ The system traces its roots back to the original *Shang Shen Marketing Science* 
 
 ## 🚀 Three Startup Packages
 
-1. **Full Version** (recommended for beginners): [`dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md) — Copy and use, supports mode switching
+1. **Full Version** (recommended for beginners): dist/01_core/[`6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md) — Copy and use, supports mode switching
 2. **Lite Demo Version**: Suitable for quick consultations and offline client acquisition
 3. **Professional Diagnosis Version**: Suitable for enterprise clients, financing presentations, and in-depth diagnostics
 ---
@@ -126,7 +126,7 @@ After the diagnostic dialogue, type **"report"** to merge all outputs into a det
 ## 👥 Three Usage Scenarios
 
 ### 1. Quick Trial (Recommended for Beginners)
-- Load ONLY `6.2纯净版完整加载包(单文件_新对话首条).md`
+- Load ONLY [`6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md)
 - Copy‑paste and go — no deployment needed
 - Best for: quick demos, personal consultations, trying out the system
 
