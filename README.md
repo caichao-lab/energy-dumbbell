@@ -81,7 +81,7 @@ Energy Dumbbell Marketing System V6.2 | Marketing Decision Reasoning Agent [Hist
 
 ### 4. 使用文件选择建议
 - 深度二次开发：`src/AI推理库/` 完整加载包（规则最全）
-- 新手快速上手：`dist/01_core/` 内的 `6.2纯净版完整加载包(单文件_新对话首条).md`
+- 新手快速上手：`dist/01_core/` 内的[`6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md)
 - ⚠️ 请勿混合使用不同来源的启动包，规则校验标准存在差异
 
 
@@ -91,7 +91,7 @@ Energy Dumbbell Marketing System V6.2 | Marketing Decision Reasoning Agent [Hist
 **最简单的方式：**
 
 1. 打开 ChatGPT / Claude / 豆包 / DeepSeek / Kimi / Qwen 其中任意一款大模型
-2. 从 [`dist/01_core/`](./dist/01_core/) 中找到 [`6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md)
+2. 从 dist/01_core/中找到 [`6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md)
 3. 全选复制内容，粘贴到新对话框内，然后发送确认
 4. 等待大模型阅读完毕，在对话框手写或语音输入你要咨询的经营问题
 5. 自动推理输出完整策略诊断报告方案
@@ -102,7 +102,7 @@ Energy Dumbbell Marketing System V6.2 | Marketing Decision Reasoning Agent [Hist
 
 ## 🚀 三个启动包
 
-1. **通用完整版**（推荐新手）：[`dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md) — 复制即用，支持随时切换模式
+1. **通用完整版**（推荐新手）：dist/01_core/[`6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md) — 复制即用，支持随时切换模式
 2. **轻量化演示版**：适合快速咨询、线下拓客
 3. **专业诊断版**：适合大客户、融资演示、深度诊断
 
@@ -123,7 +123,7 @@ Energy Dumbbell Marketing System V6.2 | Marketing Decision Reasoning Agent [Hist
 ## 👥 三种使用场景
 
 ### 1. 极简试用（推荐新手）
-- 只加载 `6.2纯净版完整加载包(单文件_新对话首条).md`
+- 只加载[`6.2纯净版完整加载包(单文件_新对话首条).md`](./dist/01_core/6.2纯净版完整加载包(单文件_新对话首条).md)
 - 复制即用，无需部署
 - 适合：快速体验、个人咨询、demo 演示
 
