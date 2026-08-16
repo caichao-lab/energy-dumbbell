@@ -65,7 +65,7 @@ This repository focuses on continuously improving **business reasoning rules, th
 ## 📚 Supplemental Repository Notes
 
 ### 1. Project Basics
-This repository is the V6.2 historical archive of the Energy Dumbbell Marketing System. Total compressed package size is 4.17 MB, all in Markdown format (only iteration mind maps are in TXT and PDF).
+This repository is the V6.2 historical archive of the Energy Dumbbell Marketing System. Total compressed package size is 4.2 MB, all in Markdown format (only iteration mind maps are in TXT and PDF).
 
 This version was finalized in July 2026 as a transitional release. A next‑generation inference engine has been completely refactored and will be published in a separate repository. **This repository will not receive further updates.**
 
@@ -173,7 +173,7 @@ A: `src/` contains the complete original development assets for deep researchers
 ## 📥 Download Mirrors
 
 - **Primary source (recommended)**: Clone from GitHub / Gitee
-- **Alternative mirrors (full 4.17 MB compressed package)**:
+- **Alternative mirrors (full 4.2 MB compressed package)**:
   - **Aliyun Drive**: https://www.alipan.com/s/SDtrDn5CSgu
   - **Quark Drive**: https://pan.quark.cn/s/68946b332736
 
@@ -183,7 +183,7 @@ A: `src/` contains the complete original development assets for deep researchers
 
 - **Version**: 6.2 (historical archive, no further updates)
 - **Updated**: 2026‑08‑14
-- **Compressed package size**: 4.17 MB
+- **Compressed package size**: 4.2 MB
 - **Format**: Markdown text
 - **Gitee**: https://gitee.com/caichao-lab/energy-dumbbell
 - **GitHub**: https://github.com/caichao-lab/energy-dumbbell
